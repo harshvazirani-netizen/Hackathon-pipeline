@@ -1,0 +1,12 @@
+# Core pipeline (install now):
+fal-client>=0.5.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+pydantic>=2.0
+anthropic>=0.40
+elevenlabs>=1.0
+
+# QA Layer 2 (transcription) — install when you reach QA. Heavier; CPU is fine.
+#   pip install faster-whisper
+# QA Layer 1 + frame sampling need the ffmpeg/ffprobe BINARIES (not a pip pkg):
+#   brew install ffmpeg
