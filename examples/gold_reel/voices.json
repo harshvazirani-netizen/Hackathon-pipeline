@@ -6,29 +6,29 @@
     "accent": "Indian",
     "language": "en",
     "voice_id": "Dy1awEdnuMQtEftpr6Pa",
-    "why": "Frame shows a middle-aged Indian man in a suit speaking authoritatively in an interview/podcast setting. His lines are measured, analytical English with Indian phrasing ('If you have asked'). Ankit is a middle-aged Indian male voice with a natural, conversational, engaging tone — ideal for a credible 25-yr expert delivering market analysis in Indian-accented English.",
+    "why": "Frame shows a middle-aged Indian man in a suit speaking authoritatively into a podcast mic. Ankit is a middle-aged standard (Indian) male with a natural, conversational, engaging tone — perfect for a seasoned 25-yr market expert delivering measured, confident English analysis.",
     "name": "Ankit - Conversational Hindi Narration",
     "source": "vision"
   },
   "HOST": {
     "speaker": "HOST",
-    "age": "20s-30s",
+    "age": "20s",
     "gender": "male",
     "accent": "Indian",
     "language": "en",
-    "voice_id": "xczpZiFRj9tHyrsnkjgW",
-    "why": "Frame shows a young Indian man hosting a podcast, asking curious, relatable questions ('should I buy gold right now?'). Agastya (Social Media & Travel Vlogger) is a young Indian male voice with spontaneous, engaging energy that fits a young interviewer/host, and is distinct from the expert's voice.",
-    "name": "Agastya - Social Media & Travel Vlogger ",
+    "voice_id": "3OUAuH7CeDSQhCCijs1Y",
+    "why": "Frame shows a young Indian man (20s) in a black tee hosting a podcast. Bunty is a young standard (Indian) male podcast host — casual, confident, and conversational, ideal for the curious interviewer asking relatable buyer questions.",
+    "name": "Bunty - Fun Podcast Host",
     "source": "vision"
   },
   "VO": {
     "speaker": "VO",
-    "age": "30s-40s",
+    "age": "30s",
     "gender": "male",
     "accent": "Indian",
     "language": "en",
     "voice_id": "SHbhumHCu8CeDYRlXKea",
-    "why": "VO narrates the data-driven ad copy over charts and gold bars with a CTA to follow. Aakash Aryan is a charismatic, polished Indian male advertisement voice — perfect for confident commercial narration, and distinct from both the expert and host voices.",
+    "why": "Off-screen narration over a gold price chart needs a polished, brand-grade Indian male voice. Aakash Aryan is a charismatic standard (Indian) male advertisement voice, distinct from the expert and host, well-suited to punchy data-driven VO and a follow CTA.",
     "name": "Aakash Aryan - Charismatic Mass Ads",
     "source": "vision"
   }
