@@ -36,35 +36,75 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
     captions: list[Caption] = []
     offset = 0.0
     for clip in clips:
-        if not clip.vo_line:
+        segs = [s for s in clip.segments() if s.line]
+        if not segs:
             offset += clip.duration
             continue
-        voice = voice_map.get(clip.speaker or "VO")
-        audio_b64, alignment = _tts(clip.vo_line, voice_id=voice)
-        beat_caps = _captions_from_alignment(alignment)
-        spoken = beat_caps[-1].end if beat_caps else 0.0
 
-        target = clip.duration
-        if target and spoken > target + 0.15:
-            speed = min(1.2, spoken / target)
-            print(f"[VO] beat {clip.index}: {spoken:.1f}s > {target:.0f}s slot -> retry at {speed:.2f}x")
-            audio_b64, alignment = _tts(clip.vo_line, voice_id=voice, speed=speed)
-            beat_caps = _captions_from_alignment(alignment)
-            spoken = beat_caps[-1].end if beat_caps else 0.0
-            if spoken > target + 0.3:
-                print(f"[VO] ⚠ beat {clip.index} still {spoken:.1f}s in a {target:.0f}s slot "
-                      f"(line too long for the scene time)")
-
-        path = os.path.join(work_dir, f"vo_{clip.index:02d}.mp3")
-        with open(path, "wb") as f:
-            f.write(base64.b64decode(audio_b64))
+        if len(segs) == 1:
+            beat_caps, path = _one_segment(segs[0], clip, work_dir, voice_map)
+        else:
+            beat_caps, path = _multi_segment(segs, clip, work_dir, voice_map)
         clip.audio_path = path
-        if not target:
-            clip.duration = spoken  # no slot given -> audio defines it
+        if not clip.duration and beat_caps:
+            clip.duration = beat_caps[-1].end  # no slot given -> audio defines it
+
         for c in beat_caps:
             captions.append(Caption(text=c.text, start=c.start + offset, end=c.end + offset))
         offset += clip.duration
     return captions
+
+
+def _one_segment(seg, clip, work_dir, voice_map):
+    """Single speaker: TTS once, pace to the scene slot if it overruns."""
+    voice = voice_map.get(seg.speaker or "VO")
+    audio_b64, alignment = _tts(seg.line, voice_id=voice)
+    caps = _captions_from_alignment(alignment)
+    spoken = caps[-1].end if caps else 0.0
+    target = clip.duration
+    if target and spoken > target + 0.15:
+        speed = min(1.2, spoken / target)
+        print(f"[VO] beat {clip.index}: {spoken:.1f}s > {target:.0f}s slot -> retry at {speed:.2f}x")
+        audio_b64, alignment = _tts(seg.line, voice_id=voice, speed=speed)
+        caps = _captions_from_alignment(alignment)
+        if caps and caps[-1].end > target + 0.3:
+            print(f"[VO] ⚠ beat {clip.index} still {caps[-1].end:.1f}s in a {target:.0f}s slot")
+    path = os.path.join(work_dir, f"vo_{clip.index:02d}.mp3")
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(audio_b64))
+    return caps, path
+
+
+def _multi_segment(segs, clip, work_dir, voice_map):
+    """Multiple speakers in one scene: TTS each in its own voice, then stitch into
+    one scene mp3 (Shotstack, free). Captions accumulate across segments."""
+    seg_paths, caps, t = [], [], 0.0
+    for j, seg in enumerate(segs):
+        voice = voice_map.get(seg.speaker or "VO")
+        audio_b64, alignment = _tts(seg.line, voice_id=voice)
+        p = os.path.join(work_dir, f"vo_{clip.index:02d}_{j}.mp3")
+        with open(p, "wb") as f:
+            f.write(base64.b64decode(audio_b64))
+        seg_paths.append(p)
+        seg_caps = _captions_from_alignment(alignment)
+        for c in seg_caps:
+            caps.append(Caption(text=c.text, start=c.start + t, end=c.end + t))
+        t += (seg_caps[-1].end if seg_caps else 0.0)
+        print(f"[VO] beat {clip.index} seg {j} ({seg.speaker}): {seg.line[:40]!r}")
+    merged = _concat_audio(seg_paths, os.path.join(work_dir, f"vo_{clip.index:02d}.mp3"))
+    if clip.duration and t > clip.duration + 0.3:
+        print(f"[VO] ⚠ beat {clip.index} multi-speaker VO {t:.1f}s > {clip.duration:.0f}s slot")
+    return caps, merged
+
+
+def _concat_audio(paths: list[str], dest: str) -> str:
+    """Stitch mp3 segments into one, in order. MP3 is a frame stream, so byte
+    concatenation plays back sequentially — no ffmpeg needed."""
+    with open(dest, "wb") as out:
+        for p in paths:
+            with open(p, "rb") as f:
+                out.write(f.read())
+    return dest
 
 
 # ---- continuous (pixar) -------------------------------------------------------

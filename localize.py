@@ -20,21 +20,24 @@ def localize(clips, target: str | None = None) -> None:
     target = target or config.VOICE_LANGUAGE
     if target != "hi":
         return
-    todo = [c for c in clips if c.vo_line and not re.search(r"[ऀ-ॿ]", c.vo_line)]
-    if not todo or not os.getenv("ANTHROPIC_API_KEY"):
+    segs = [s for c in clips for s in c.segments() if s.line and not re.search(r"[ऀ-ॿ]", s.line)]
+    if not segs or not os.getenv("ANTHROPIC_API_KEY"):
         return
 
     try:
-        translations = _translate([c.vo_line for c in todo])
+        translations = _translate([s.line for s in segs])
     except Exception as e:
         print(f"[localize] ⚠ translation skipped ({type(e).__name__}); using lines as written. "
               f"{str(e)[:120]}")
         return
-    for c, hi in zip(todo, translations):
+    for s, hi in zip(segs, translations):
         if hi:
-            c.vo_original = c.vo_line
-            c.vo_line = hi
-            print(f"[localize] {c.vo_original[:34]!r} -> {hi[:40]!r}")
+            s.line_original = s.line
+            s.line = hi
+            print(f"[localize] {s.line_original[:34]!r} -> {hi[:40]!r}")
+    for c in clips:                       # keep the convenience vo_line in sync
+        if c.vo_segments:
+            c.vo_line = " ".join(s.line for s in c.vo_segments)
 
 
 _TOOL = {

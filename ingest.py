@@ -26,7 +26,7 @@ import json
 import os
 
 from ad_types import RECIPES, AdTypeRecipe, get_recipe, generic_recipe
-from schema import Clip
+from schema import Clip, VoSegment
 
 _IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
 
@@ -81,6 +81,7 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
             duration=float(b.get("duration_seconds", 5) or 5),
             storyboard_image_path=frames[i],
         ))
+    _normalize_segments(clips)
     _summarise(recipe, clips)
     return recipe, clips
 
@@ -96,15 +97,35 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
         speaker=b.get("speaker", "") or "",
         overlay_text=b.get("overlay_text", "") or b.get("text", ""),
         text_cues=b.get("text_cues", []),
+        vo_segments=b.get("vo_segments", []),
         lipsync=bool(b.get("on_camera_speech", False)),
         low_motion=_low_motion(b),
         motion_prompt=b.get("motion_prompt", ""),
         duration=float(b.get("duration", 5) or 5),
         storyboard_image_path=_resolve_frame(job_dir, b.get("storyboard_image_path")),
     ) for i, b in enumerate(beats)]
+    _normalize_segments(clips)
     print(f"[ingest] beats.json manifest ({len(clips)} beats; no Claude needed)")
     _summarise(recipe, clips)
     return recipe, clips
+
+
+def _normalize_segments(clips) -> None:
+    """Resolve per-scene VO into ordered (speaker, line) segments with GLOBAL
+    carry-forward: a segment with no speaker inherits the previous speaker."""
+    last = ""
+    for c in clips:
+        segs = list(c.vo_segments) if c.vo_segments else (
+            [VoSegment(speaker=c.speaker, line=c.vo_line)] if c.vo_line else [])
+        for s in segs:
+            if not s.speaker:
+                s.speaker = last or "VO"
+            last = s.speaker
+        c.vo_segments = segs
+        if segs:
+            c.speaker = c.speaker or segs[0].speaker
+            if not c.vo_line:
+                c.vo_line = " ".join(s.line for s in segs)
 
 
 def _resolve_frame(job_dir: str, p: str | None) -> str | None:

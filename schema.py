@@ -26,11 +26,19 @@ class TextCue(BaseModel):
     position: str = "bottom"    # "bottom" | "top" (e.g. location pill)
 
 
+class VoSegment(BaseModel):
+    """One spoken line within a scene, attributed to a character (-> their voice)."""
+    speaker: str = ""
+    line: str = ""
+    line_original: str = ""     # source before localization
+
+
 class Clip(BaseModel):
     index: int
-    vo_line: str = ""                          # dialogue/narration spoken in this beat (post-localization)
+    vo_line: str = ""                          # (single-speaker convenience) spoken line
     vo_original: str = ""                      # the source line before any translation
-    speaker: str = ""                          # who says it (EXPERT/HOST/VO/character name) -> voice casting
+    speaker: str = ""                          # (single-speaker convenience) who says vo_line
+    vo_segments: list[VoSegment] = Field(default_factory=list)  # ordered (speaker, line) within the scene
     overlay_text: str = ""                     # (legacy) single caption for the whole beat
     text_cues: list[TextCue] = Field(default_factory=list)  # timed text cues within this scene (cue sheet)
     lipsync: bool = False                      # True = a character speaks ON camera this beat
@@ -55,6 +63,14 @@ class Clip(BaseModel):
     keyframe_prompt: Optional[str] = None
     keyframe_url: Optional[str] = None
     keyframe_model: Optional[str] = None
+
+    def segments(self) -> list[VoSegment]:
+        """Ordered VO segments for this scene; falls back to the single vo_line."""
+        if self.vo_segments:
+            return self.vo_segments
+        if self.vo_line:
+            return [VoSegment(speaker=self.speaker, line=self.vo_line)]
+        return []
 
 
 class Caption(BaseModel):

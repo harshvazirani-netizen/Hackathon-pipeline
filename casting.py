@@ -32,7 +32,7 @@ import config
 def cast(job_dir: str, clips, screenplay: str = "") -> dict:
     """Lock one voice per character. Returns {speaker: voice_id}; persists rich
     profiles (age/gender/accent/language/why) to <job>/voices.json."""
-    speakers = sorted({(c.speaker or "VO") for c in clips if c.vo_line})
+    speakers = sorted({(s.speaker or "VO") for c in clips for s in c.segments() if s.line})
     if not speakers:
         return {}
 
@@ -90,14 +90,15 @@ def cast(job_dir: str, clips, screenplay: str = "") -> dict:
 # ---- character signals --------------------------------------------------------
 
 def _lines_of(speaker: str, clips) -> str:
-    return " ".join(c.vo_line for c in clips if (c.speaker or "VO") == speaker and c.vo_line)
+    return " ".join(s.line for c in clips for s in c.segments()
+                    if (s.speaker or "VO") == speaker and s.line)
 
 
 def _speaker_frame(speaker: str, clips) -> str | None:
-    """Storyboard frame to SEE the character — first scene they appear in."""
+    """Storyboard frame to SEE the character — first scene they speak in."""
     for c in clips:
-        if (c.speaker or "VO") == speaker and c.storyboard_image_path \
-                and os.path.exists(c.storyboard_image_path):
+        if any((s.speaker or "VO") == speaker for s in c.segments()) \
+                and c.storyboard_image_path and os.path.exists(c.storyboard_image_path):
             return c.storyboard_image_path
     return None
 
