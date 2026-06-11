@@ -24,6 +24,7 @@ class Clip(BaseModel):
     speaker: str = ""                          # who says it (EXPERT/HOST/VO/character name) -> voice casting
     overlay_text: str = ""                     # screenplay 'text:' -> bottom caption for this beat's duration
     lipsync: bool = False                      # True = a character speaks ON camera this beat
+    low_motion: bool = False                   # near-static render to keep on-frame text/logos/packaging legible
     motion_prompt: str = ""                    # action for this beat (from screenplay)
     duration: float = 0.0                      # screenplay timing; lip-sync beats overwrite w/ audio length
 

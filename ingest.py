@@ -30,6 +30,19 @@ from schema import Clip
 
 _IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
 
+# Scenes whose legibility matters -> render near-static so the video model
+# doesn't garble on-frame text/logos/packaging.
+_TEXT_HEAVY = ("product", "packaging", "packet", "package", "logo", "brand",
+               "chart", "graph", "price", "split screen", "split-screen",
+               "text card", "end card", "whiteboard", "board", "label", "sign")
+
+
+def _low_motion(beat: dict) -> bool:
+    if "low_motion" in beat:
+        return bool(beat["low_motion"])           # explicit override wins
+    hay = (beat.get("motion_prompt", "") + " " + beat.get("overlay_text", "")).lower()
+    return any(k in hay for k in _TEXT_HEAVY)
+
 
 def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
     # Fast path: a pre-built beats.json (e.g. from html_adapter) is authoritative
@@ -63,6 +76,7 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
             speaker=b.get("speaker", "") or "",
             overlay_text=b.get("overlay_text", ""),
             lipsync=bool(b.get("on_camera_speech", False)),
+            low_motion=_low_motion(b),
             motion_prompt=b.get("motion_prompt", ""),
             duration=float(b.get("duration_seconds", 5) or 5),
             storyboard_image_path=frames[i],
@@ -82,6 +96,7 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
         speaker=b.get("speaker", "") or "",
         overlay_text=b.get("overlay_text", "") or b.get("text", ""),
         lipsync=bool(b.get("on_camera_speech", False)),
+        low_motion=_low_motion(b),
         motion_prompt=b.get("motion_prompt", ""),
         duration=float(b.get("duration", 5) or 5),
         storyboard_image_path=_resolve_frame(job_dir, b.get("storyboard_image_path")),

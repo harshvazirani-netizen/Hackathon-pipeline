@@ -87,7 +87,8 @@ def _ensure_min_size(path: str, min_side: int = 512) -> str:
 
 def image_to_video(image_url: str, motion_prompt: str,
                    duration: int = config.DEFAULT_CLIP_SECONDS,
-                   model_id: str | None = None) -> tuple[str, dict]:
+                   model_id: str | None = None,
+                   low_motion: bool = False) -> tuple[str, dict]:
     """Visual-first animation (pixar): animate a still into a clip. model_id is the
     recipe's animator and is required."""
     if not model_id:
@@ -96,12 +97,22 @@ def image_to_video(image_url: str, motion_prompt: str,
     # duration enum "5"/"10" only, NO aspect_ratio, generate_audio default true.
     # Motion clips are silent here (SFX/VO added in assembly), so audio is off; the
     # clip is trimmed to the beat's timeline length during assembly.
+    prompt = motion_prompt or "subtle, natural motion; keep the framing steady"
     args = {
         "start_image_url": image_url,
-        "prompt": motion_prompt or "subtle, natural motion; keep the framing steady",
+        "prompt": prompt,
         "duration": "10" if int(duration) > 5 else "5",
         "generate_audio": False,
     }
+    if low_motion:
+        # Text/product/graphic scenes: near-static so Kling doesn't melt the
+        # on-frame lettering. Only prompt + negative_prompt exist on this model.
+        args["prompt"] = (prompt + " Hold the camera nearly static with only very "
+                          "subtle movement; keep all text, logos and packaging perfectly "
+                          "sharp, stable and legible — do not warp, morph, or animate any letters.")
+        args["negative_prompt"] = ("warped text, distorted text, morphing letters, "
+                                    "gibberish text, changing logo, melting, flicker, "
+                                    "blur, distort, low quality")
     result = _run(model_id, args)
     return _first_media_url(result, kind="video"), result
 

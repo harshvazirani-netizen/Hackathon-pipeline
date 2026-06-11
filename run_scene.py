@@ -56,7 +56,7 @@ def main():
         video_url, raw = video_gen.image_to_video(
             clip.start_frame_url, clip.motion_prompt,
             duration=int(clip.duration or config.DEFAULT_CLIP_SECONDS),
-            model_id=recipe.motion_model)
+            model_id=recipe.motion_model, low_motion=clip.low_motion)
 
     local = video_gen.download(video_url, os.path.join(out, "clip.mp4"))
     with open(os.path.join(out, "raw.json"), "w") as f:
