@@ -61,6 +61,7 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
             index=i,
             vo_line=b.get("vo_line", ""),
             speaker=b.get("speaker", "") or "",
+            overlay_text=b.get("overlay_text", ""),
             lipsync=bool(b.get("on_camera_speech", False)),
             motion_prompt=b.get("motion_prompt", ""),
             duration=float(b.get("duration_seconds", 5) or 5),
@@ -79,6 +80,7 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
         index=b.get("index", i),
         vo_line=b.get("vo_line", ""),
         speaker=b.get("speaker", "") or "",
+        overlay_text=b.get("overlay_text", "") or b.get("text", ""),
         lipsync=bool(b.get("on_camera_speech", False)),
         motion_prompt=b.get("motion_prompt", ""),
         duration=float(b.get("duration", 5) or 5),
@@ -244,6 +246,7 @@ _TOOL = {
                     "properties": {
                         "vo_line": {"type": "string", "description": "Exact dialogue/narration spoken in this beat (empty if none)."},
                         "speaker": {"type": "string", "description": "WHO speaks this beat, exactly as named in the screenplay (e.g. MEERA, RAJ, EXPERT, HOST). Use 'VO' for off-camera narration. Empty if silent."},
+                        "overlay_text": {"type": "string", "description": "The screenplay's on-screen 'text:' for this beat (shown as a bottom caption). Empty if none."},
                         "on_camera_speech": {"type": "boolean", "description": "True ONLY if a visible character speaks this beat ON camera (dialogue -> lip-sync). False for silent action, SFX-only, or off-camera VO/narration (e.g. end-card voiceover)."},
                         "motion_prompt": {"type": "string", "description": "The action/camera movement in this beat, 1-2 sentences."},
                         "duration_seconds": {"type": "number", "description": "Beat length in seconds, from the screenplay's timing if present."},

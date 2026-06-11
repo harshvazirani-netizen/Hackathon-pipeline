@@ -75,20 +75,40 @@ def _build_edit(bundle) -> dict:
 
     tracks = []
 
-    # Captions track (on top). Chunk word captions into short readable lines.
+    # Captions track (on top).
+    # Preferred: the screenplay's per-beat 'text' (overlay_text) shown at the
+    # bottom for the whole beat. Fallback (no overlay_text anywhere): word
+    # captions chunked from the TTS timestamps.
     caption_clips = []
-    for line in _chunk_captions(bundle.captions):
-        caption_clips.append({
-            "asset": {
-                "type": "title",
-                "text": line["text"],
-                "style": "subtitle",
-                "size": "medium",
-                "position": "bottom",
-            },
-            "start": round(line["start"], 3),
-            "length": round(line["end"] - line["start"], 3),
-        })
+    if any(c.overlay_text for c in bundle.clips):
+        for ct in bundle.timing.clips:
+            clip = next(c for c in bundle.clips if c.index == ct.index)
+            if not clip.overlay_text:
+                continue
+            caption_clips.append({
+                "asset": {
+                    "type": "title",
+                    "text": clip.overlay_text,
+                    "style": "subtitle",
+                    "size": "medium",
+                    "position": "bottom",
+                },
+                "start": round(ct.start, 3),
+                "length": round(ct.end - ct.start, 3),
+            })
+    else:
+        for line in _chunk_captions(bundle.captions):
+            caption_clips.append({
+                "asset": {
+                    "type": "title",
+                    "text": line["text"],
+                    "style": "subtitle",
+                    "size": "medium",
+                    "position": "bottom",
+                },
+                "start": round(line["start"], 3),
+                "length": round(line["end"] - line["start"], 3),
+            })
     if caption_clips:
         tracks.append({"clips": caption_clips})
 
