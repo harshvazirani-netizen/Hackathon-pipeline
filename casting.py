@@ -58,7 +58,8 @@ def cast(job_dir: str, clips, screenplay: str = "") -> dict:
         # BOTH genders. Hindi-library voices (Bunty/Aakash male, Naina female, ...)
         # speak English fine via the multilingual model, so they fit Indian-English
         # characters too — alongside any English voices tagged with an Indian accent.
-        if _indian_context(screenplay, clips):
+        indian = config.PREFER_INDIAN_VOICES or _indian_context(screenplay, clips)
+        if indian:
             prepend = _library_voices("hi") + _library_voices("en", accent="indian")
         elif any(v == "hi" for v in lang_by.values()):
             prepend = _library_voices("hi")
@@ -147,8 +148,12 @@ def _claude_cast(speakers, clips, screenplay, pool, lang_by, frames_by) -> dict:
         "look at their storyboard frame to judge apparent AGE and GENDER, and use their "
         "lines + the screenplay to judge ACCENT and LANGUAGE. Then pick the single "
         "best-matching voice from the roster. Use a DIFFERENT voice per character. "
-        "Characters speaking Hindi/Hinglish MUST get a native Hindi / Indian-accent voice.\n\n"
-        f"Screenplay excerpt:\n{screenplay[:800]}")}]
+        + ("DEFAULT: choose a native Indian / Hindi-accent voice for EVERY character "
+           "(this brand's voices are Indian by default) — match gender and age, but "
+           "the accent must be Indian unless a character is explicitly non-Indian.\n\n"
+           if config.PREFER_INDIAN_VOICES else
+           "Characters speaking Hindi/Hinglish MUST get a native Hindi / Indian-accent voice.\n\n")
+        + f"Screenplay excerpt:\n{screenplay[:800]}")}]
     for s in speakers:
         content.append({"type": "text", "text":
                         f"\n=== CHARACTER: {s} (detected language: {lang_by.get(s)}) ===\n"
