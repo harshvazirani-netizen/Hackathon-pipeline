@@ -21,8 +21,9 @@ from pydantic import BaseModel, Field
 class Clip(BaseModel):
     index: int
     vo_line: str = ""                          # dialogue/narration for this beat
+    lipsync: bool = False                      # True = a character speaks ON camera this beat
     motion_prompt: str = ""                    # action for this beat (from screenplay)
-    duration: float = 0.0                      # set by screenplay timing, or by audio length (lip-sync)
+    duration: float = 0.0                      # screenplay timing; lip-sync beats overwrite w/ audio length
 
     # storyboard-driven inputs (the approved frame IS the look):
     storyboard_image_path: Optional[str] = None   # local approved frame
@@ -84,7 +85,6 @@ class QAResult(BaseModel):
 class AssetBundle(BaseModel):
     ad_id: str
     ad_type: str                           # recipe name (preset or auto-detected label)
-    needs_lipsync: bool = False            # set from the recipe; drives flow + assembly
     vision_rubric: str = ""                # set from the recipe; used by QA layer 3
     script: str = ""
     character_bible: str = ""              # (legacy) hero character desc

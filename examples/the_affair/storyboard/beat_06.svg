@@ -1,0 +1,17 @@
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="200" fill="#f0d9c0"/>
+          <circle cx="158" cy="100" r="58" fill="#e0b487" stroke="#2a1a14" stroke-width="2.6"/>
+          <path d="M102 96 q56 -52 112 0" fill="#2a1a14"/>
+          <!-- wide smitten eyes -->
+          <circle cx="134" cy="96" r="9" fill="#fff" stroke="#2a1a14" stroke-width="2.2"/>
+          <circle cx="182" cy="96" r="9" fill="#fff" stroke="#2a1a14" stroke-width="2.2"/>
+          <path d="M130 96 c-3 -6 8 -6 5 0 M178 96 c-3 -6 8 -6 5 0" fill="#6e1423"/>
+          <!-- open dreamy mouth -->
+          <ellipse cx="158" cy="128" rx="11" ry="9" fill="#7a2030" stroke="#2a1a14" stroke-width="2.2"/>
+          <!-- fork bite -->
+          <line x1="200" y1="150" x2="178" y2="126" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>
+          <circle cx="176" cy="124" r="5" fill="#5a7d4e" stroke="#2a1a14" stroke-width="1.8"/>
+          <!-- hearts -->
+          <path d="M236 56 c-9 -15 -24 -3 0 13 c24 -16 9 -28 0 -13" fill="#6e1423"/>
+          <path d="M84 66 c-7 -11 -18 -2 0 10 c18 -12 7 -21 0 -10" fill="#e9a13c"/>
+        </svg>

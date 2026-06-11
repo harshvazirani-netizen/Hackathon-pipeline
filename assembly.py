@@ -40,9 +40,14 @@ def _headers() -> dict:
 
 def render(bundle, out_path: str) -> str:
     """Render the bundle to a local MP4 and return its path."""
-    # Host the VO so Shotstack can fetch it.
+    # Host any local VO so Shotstack can fetch it.
     if bundle.audio.vo_path and not bundle.audio.vo_url:
         bundle.audio.vo_url = _ingest_upload(bundle.audio.vo_path)
+    # Motion beats with a line (e.g. end-card VO) carry per-beat audio -> host it.
+    # (Lip-sync beats already have their voice baked into the generated clip.)
+    for clip in bundle.clips:
+        if (not clip.lipsync) and clip.audio_path and not clip.audio_url:
+            clip.audio_url = _ingest_upload(clip.audio_path)
 
     edit = _build_edit(bundle)
     r = requests.post(_base("edit") + "/render", json=edit, headers=_headers(), timeout=60)
@@ -98,13 +103,26 @@ def _build_edit(bundle) -> dict:
             "scale": 0.15,
         }]})
 
-    # VO narration track.
+    # Optional continuous VO narration track (only if a continuous track was made).
     if bundle.audio.vo_url:
         tracks.append({"clips": [{
             "asset": {"type": "audio", "src": bundle.audio.vo_url},
             "start": 0,
             "length": bundle.timing.total_duration,
         }]})
+
+    # Per-beat VO for MOTION beats (lip-sync beats carry audio inside their clip).
+    beat_vo = []
+    for ct in bundle.timing.clips:
+        clip = next(c for c in bundle.clips if c.index == ct.index)
+        if (not clip.lipsync) and clip.audio_url:
+            beat_vo.append({
+                "asset": {"type": "audio", "src": clip.audio_url},
+                "start": round(ct.start, 3),
+                "length": round(ct.end - ct.start, 3),
+            })
+    if beat_vo:
+        tracks.append({"clips": beat_vo})
 
     # Video track last (renders at the bottom).
     tracks.append({"clips": video_clips})

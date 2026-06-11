@@ -1,66 +1,65 @@
 """
-The controlled vocabulary + dispatcher (this is what makes it multi-type).
+Controlled vocabulary + dispatcher.
 
-Each ad-type is a RECIPE that carries everything that differs between types:
-  - needs_lipsync : True  -> audio-first flow (voice made first, drives the mouth),
-                             voiceover is split PER BEAT.
-                    False -> visual-first flow (animate the frame, narrate over it).
-  - animator_model: the fal model id for this type's generation.
-  - director_focus: a hint to the ingest step about what kind of action to extract.
-  - vision_rubric : the QA Layer-3 prompt this type is graded against.
+A recipe carries the per-type choices. Crucially each recipe has TWO generation
+models, because lip-sync is a PER-BEAT property, not per-ad (an ad like a
+microdrama mixes talking beats and silent action beats):
 
-To add a 4th type later: add one AdTypeRecipe entry. Nothing else changes.
+  - lipsync_model : talk beats (a character speaks on camera) — image + audio -> talking
+  - motion_model  : silent beats (action / SFX / end-card) — image -> video
+
+The per-beat router (generate.py) picks one per beat based on Clip.lipsync.
+
+To add a 4th type: add one AdTypeRecipe. Anything not matched gets generic_recipe().
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Shared default for silent / motion beats across all types (any visual style).
+_MOTION = "fal-ai/kling-video/v2.6/pro/image-to-video"   # ~$0.07/s
+
 
 @dataclass(frozen=True)
 class AdTypeRecipe:
     name: str
-    needs_lipsync: bool
-    animator_model: str          # fal endpoint id (verify on fal.ai/models)
+    lipsync_model: str           # talk beats (verify ids on fal.ai/models)
+    motion_model: str            # silent beats
     director_focus: str
     vision_rubric: str
-    animator_alt: str = ""       # A/B alternative model id
 
 
 RECIPES = {
     "ai_human": AdTypeRecipe(
         name="ai_human",
-        needs_lipsync=True,
-        animator_model="fal-ai/bytedance/omnihuman/v1.5",          # $0.16/s
-        animator_alt="fal-ai/kling-video/ai-avatar/v2/pro",        # $0.115/s
-        director_focus="A real person delivering dialogue to camera.",
+        lipsync_model="fal-ai/bytedance/omnihuman/v1.5",   # $0.16/s, realistic human + audio
+        motion_model=_MOTION,
+        director_focus="Realistic human characters; some beats are dialogue to camera, some are action.",
         vision_rubric=(
-            "Grading frames of an AI-human video ad. Score 0-10 on: realistic human "
-            "face, accurate lip-sync to the spoken words, natural expression, and "
-            "match to the intended storyboard frame. Flag uncanny/garbled."
+            "Grading frames of an AI-human video ad. Score 0-10: realistic human face, "
+            "accurate lip-sync where a character speaks, natural expression, match to the "
+            "storyboard frame. Flag uncanny/garbled."
         ),
     ),
     "fruit_object": AdTypeRecipe(
         name="fruit_object",
-        needs_lipsync=True,
-        animator_model="fal-ai/kling-video/ai-avatar/v2/pro",      # $0.115/s; animates "any character"
-        animator_alt="fal-ai/bytedance/omnihuman/v1.5",            # A/B for object lip-sync
-        director_focus="An anthropomorphized object/fruit speaking dialogue to camera.",
+        lipsync_model="fal-ai/kling-video/ai-avatar/v2/pro",  # $0.115/s, animates "any character" + audio
+        motion_model=_MOTION,
+        director_focus="An anthropomorphized object/fruit character; some beats talk, some are action.",
         vision_rubric=(
-            "Grading frames of a talking-object ad. Score 0-10 on: the object has a "
-            "believable moving mouth synced to the words, stays on-model (no melting/"
-            "morphing), and matches the storyboard frame. Flag garbled/artifacted."
+            "Grading frames of a talking-object ad. Score 0-10: believable moving mouth "
+            "synced to the words on talk beats, object stays on-model (no melt/morph), "
+            "matches the storyboard frame. Flag garbled."
         ),
     ),
     "pixar_animation": AdTypeRecipe(
         name="pixar_animation",
-        needs_lipsync=False,
-        animator_model="fal-ai/kling-video/v2.6/pro/image-to-video",  # ~$0.07/s
-        animator_alt="fal-ai/pixverse/v4.5/image-to-video",
+        lipsync_model="fal-ai/kling-video/ai-avatar/v2/pro",  # if a 3D character talks on camera
+        motion_model=_MOTION,
         director_focus="A 3D/Pixar-style animated scene; describe camera and character motion.",
         vision_rubric=(
-            "Grading frames of a 3D/Pixar-style animated ad. Score 0-10 on: polished "
-            "3D look, coherent motion (no garble/melting), and match to the storyboard "
-            "frame. Flag artifacts."
+            "Grading frames of a 3D/Pixar-style animated ad. Score 0-10: polished 3D look, "
+            "coherent motion (no garble/melt), match to the storyboard frame. Flag artifacts."
         ),
     ),
 }
@@ -72,32 +71,16 @@ def get_recipe(ad_type: str) -> AdTypeRecipe:
     return RECIPES[ad_type]
 
 
-def generic_recipe(needs_lipsync: bool, label: str = "other") -> AdTypeRecipe:
-    """Build a recipe for a storyboard that ISN'T one of the named presets.
-
-    We never reject an unknown type — the only thing that truly changes the flow
-    is whether a character speaks on camera (lip-sync) or not, so we route on that
-    and pick a GENERAL model that handles arbitrary subjects/styles.
-    """
-    if needs_lipsync:
-        return AdTypeRecipe(
-            name=label or "other",
-            needs_lipsync=True,
-            animator_model="fal-ai/kling-video/ai-avatar/v2/pro",   # animates "any character" + audio
-            director_focus="A character speaking dialogue to camera.",
-            vision_rubric=(
-                "Grading frames of a talking-character ad. Score 0-10: believable "
-                "moving mouth synced to the words, subject stays on-model (no melt/"
-                "morph), matches the storyboard frame. Flag garbled/artifacted."
-            ),
-        )
+def generic_recipe(label: str = "other") -> AdTypeRecipe:
+    """A recipe for storyboards that aren't one of the named presets. Uses general
+    models that handle arbitrary subjects/styles; per-beat routing still applies."""
     return AdTypeRecipe(
         name=label or "other",
-        needs_lipsync=False,
-        animator_model="fal-ai/kling-video/v2.6/pro/image-to-video",  # any-style motion
-        director_focus="Describe the camera and subject motion in the scene.",
+        lipsync_model="fal-ai/kling-video/ai-avatar/v2/pro",  # animates "any character" + audio
+        motion_model=_MOTION,
+        director_focus="Describe each beat's action and camera; some beats may have dialogue.",
         vision_rubric=(
-            "Grading frames of a video ad. Score 0-10: coherent motion (no garble/"
-            "melting) and match to the storyboard frame. Flag artifacts."
+            "Grading frames of a video ad. Score 0-10: coherent motion (no garble/melt), "
+            "believable lip-sync on any talk beats, match to the storyboard frame. Flag artifacts."
         ),
     )

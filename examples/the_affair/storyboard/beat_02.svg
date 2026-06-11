@@ -1,0 +1,17 @@
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="200" fill="#f0d9c0"/>
+          <circle cx="160" cy="100" r="58" fill="#f0c9a0" stroke="#2a1a14" stroke-width="2.6"/>
+          <path d="M104 92 q56 -54 112 0" fill="#2a1a14"/>
+          <!-- blush -->
+          <circle cx="128" cy="112" r="9" fill="#e98aa0" opacity=".7"/>
+          <circle cx="192" cy="112" r="9" fill="#e98aa0" opacity=".7"/>
+          <!-- eyes closed dreamy -->
+          <path d="M132 96 q8 7 16 0" fill="none" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M172 96 q8 7 16 0" fill="none" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- small smile -->
+          <path d="M146 124 q14 12 28 0" fill="none" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- hand -->
+          <path d="M212 150 q14 -10 6 -28" fill="none" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- floating heart -->
+          <path d="M236 56 c-9 -15 -24 -3 0 13 c24 -16 9 -28 0 -13" fill="#6e1423"/>
+        </svg>

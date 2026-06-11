@@ -1,17 +1,12 @@
 """
 End-to-end glue (Stage 6): a job folder -> finished vertical ad, routed by ad-type.
 
-  ingest (parse screenplay + pair storyboard frames)  ->  get recipe
-  then, by recipe:
-
-    lip-sync (ai_human, fruit_object):   AUDIO-FIRST
-       voiceover per-beat -> generate(frame + audio) -> assemble -> QA
-       (clips carry their own voice; no separate narration track)
-
-    pixar_animation:                     VISUAL-FIRST
-       generate(frame + motion) -> voiceover (narration) -> assemble -> QA
-
-  QA pass -> ship | QA fail -> retry generation | exhausted -> dead-letter.
+  ingest -> recipe + per-beat clips (each Clip.lipsync set)
+  voiceover per-beat (lip-sync beats get audio that drives the mouth;
+                      motion beats with a line get audio for an overlay)
+  generate  PER BEAT: lipsync beat -> recipe.lipsync_model (image+audio),
+                      motion beat  -> recipe.motion_model (image->video)
+  assemble (Shotstack) -> QA gate -> ship | retry | dead-letter.
 
 Usage:
   python pipeline.py --job examples/sample_job
@@ -31,7 +26,7 @@ import generate
 import voiceover
 import assembly
 from qa import gate
-from schema import AssetBundle, AudioTrack
+from schema import AssetBundle
 
 
 def run(job_dir: str) -> AssetBundle | None:
@@ -39,10 +34,10 @@ def run(job_dir: str) -> AssetBundle | None:
     ad_type = recipe.name
     ad_id = _ad_id(job_dir, ad_type)
     work = os.path.join(config.WORK_DIR, ad_id)
-    print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type}, lip-sync={recipe.needs_lipsync})\n{'=' * 60}")
+    talk = sum(1 for c in clips if c.lipsync)
+    print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type}; {talk} lip-sync + {len(clips) - talk} motion beats)\n{'=' * 60}")
 
     bundle = AssetBundle(ad_id=ad_id, ad_type=ad_type,
-                         needs_lipsync=recipe.needs_lipsync,
                          vision_rubric=recipe.vision_rubric,
                          script=f"(job: {job_dir})", clips=clips)
 
@@ -50,18 +45,13 @@ def run(job_dir: str) -> AssetBundle | None:
     for attempt in range(1, config.MAX_GENERATION_RETRIES + 2):
         print(f"\n--- attempt {attempt}/{config.MAX_GENERATION_RETRIES + 1} ---")
         try:
-            if recipe.needs_lipsync:
-                print("[VO] per-beat (drives lip-sync) ...")
-                bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work)
-                print("[GEN] talking clips (image + audio) ...")
-                generate.generate_clips(bundle.clips, recipe, ad_id)
-                bundle.audio = AudioTrack()  # clips already contain their voice
-            else:
-                print("[GEN] animating storyboard frames ...")
-                generate.generate_clips(bundle.clips, recipe, ad_id)
-                print("[VO] continuous narration ...")
-                bundle.audio, bundle.captions = voiceover.synthesize(
-                    bundle.clips, os.path.join(work, "vo.mp3"))
+            # Per-beat VO first: lip-sync beats need their audio to drive the mouth;
+            # motion beats with a line (e.g. end-card VO) get audio for an overlay.
+            print("[VO] per-beat ...")
+            bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work)
+
+            print("[GEN] per-beat (lip-sync vs motion) ...")
+            generate.generate_clips(bundle.clips, recipe, ad_id)
 
             bundle.compute_timing()
 

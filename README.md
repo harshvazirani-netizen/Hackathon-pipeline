@@ -21,19 +21,17 @@ on camera?). Everything routes through **fal.ai** (one key, one bill, swap a mod
 string in `ad_types.py`). Voice = **ElevenLabs**, brains/QA = **Claude**, stitching =
 **Shotstack**, cheap QA = **ffmpeg + Whisper** (local).
 
-## The flow (ordering depends on the type)
+## The flow (routing is PER BEAT)
+A single ad mixes talking and silent beats (a microdrama has dialogue beats *and*
+action/SFX/end-card beats), so the recipe carries **two** models and each beat is
+routed on its own `lipsync` flag:
 ```
-job folder ──► ingest ──► dispatcher picks recipe ──► …
-                (parse screenplay,
-                 pair each beat
-                 to its frame)
+job folder ──► ingest ──► recipe + per-beat clips ──► voiceover (per beat) ──► generate ──► assemble ──► QA ──► ship
+               (parse + pair                          lip-sync beats get
+                each beat to its frame)               audio that drives the mouth
 
-  ai_human / fruit_object (lip-sync) — AUDIO FIRST:
-     voiceover per-beat ─► generate(frame + audio) ─► assemble ─► QA ─► ship
-     (each beat's frame is driven by its own line; clips carry their voice)
-
-  pixar_animation — VISUAL FIRST:
-     generate(frame + motion) ─► voiceover (narration) ─► assemble ─► QA ─► ship
+  per beat:  speaks on camera?  ── yes ─► recipe.lipsync_model  (image + audio → talking, voice baked in)
+                                └─ no ──► recipe.motion_model   (image → motion; any VO laid over in assembly)
 ```
 QA pass → `output/shipped/` · fail → retry generation ×2 · still failing → `logs/dead_letter/`.
 
@@ -42,12 +40,14 @@ QA pass → `output/shipped/` · fail → retry generation ×2 · still failing 
 my_job/
 ├── job.json                 # OPTIONAL — type is read from the storyboard; this only overrides it
 ├── screenplay.txt           # .txt / .fountain / .md  (with timing)
+├── beats.json               # OPTIONAL — a pre-parsed manifest (e.g. from html_adapter) skips Claude
 └── storyboard/
     ├── beat_01.png          # approved frame for beat 1
     ├── beat_02.png          # …sorted filename order == beat order
     └── ...
 ```
-See [examples/sample_job](examples/sample_job) (drop real frames into its `storyboard/`).
+See [examples/sample_job](examples/sample_job), or [examples/the_affair](examples/the_affair)
+(built from an HTML storyboard via `python html_adapter.py <file.html>`).
 
 ## Setup
 ```bash

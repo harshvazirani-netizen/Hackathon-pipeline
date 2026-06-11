@@ -32,6 +32,12 @@ _IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
 
 
 def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
+    # Fast path: a pre-built beats.json (e.g. from html_adapter) is authoritative
+    # -> skip the Claude parse/classify entirely.
+    manifest = os.path.join(job_dir, "beats.json")
+    if os.path.exists(manifest):
+        return _ingest_from_manifest(job_dir, manifest)
+
     screenplay = _read_screenplay(job_dir)
     frames = _list_frames(job_dir)
     if not frames:
@@ -54,14 +60,49 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
         clips.append(Clip(
             index=i,
             vo_line=b.get("vo_line", ""),
+            lipsync=bool(b.get("on_camera_speech", False)),
             motion_prompt=b.get("motion_prompt", ""),
             duration=float(b.get("duration_seconds", 5) or 5),
             storyboard_image_path=frames[i],
-            animator_model=recipe.animator_model,
         ))
-    print(f"[ingest] {recipe.name} (lip-sync={recipe.needs_lipsync}): "
-          f"{len(clips)} beats paired with storyboard frames")
+    _summarise(recipe, clips)
     return recipe, clips
+
+
+def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, list[Clip]]:
+    """Build clips straight from a pre-parsed beats.json (deterministic, no Claude)."""
+    with open(manifest, encoding="utf-8") as f:
+        beats = json.load(f)
+    recipe = _recipe_from_jobjson(job_dir)
+    clips = [Clip(
+        index=b.get("index", i),
+        vo_line=b.get("vo_line", ""),
+        lipsync=bool(b.get("on_camera_speech", False)),
+        motion_prompt=b.get("motion_prompt", ""),
+        duration=float(b.get("duration", 5) or 5),
+        storyboard_image_path=b.get("storyboard_image_path"),
+    ) for i, b in enumerate(beats)]
+    print(f"[ingest] beats.json manifest ({len(clips)} beats; no Claude needed)")
+    _summarise(recipe, clips)
+    return recipe, clips
+
+
+def _recipe_from_jobjson(job_dir: str) -> AdTypeRecipe:
+    p = os.path.join(job_dir, "job.json")
+    if os.path.exists(p):
+        with open(p) as f:
+            t = json.load(f).get("ad_type")
+        if t and t in RECIPES:
+            return get_recipe(t)
+        if t and t != "auto":
+            return generic_recipe(t)
+    return generic_recipe("other")
+
+
+def _summarise(recipe: AdTypeRecipe, clips: list[Clip]) -> None:
+    talk = sum(1 for c in clips if c.lipsync)
+    print(f"[ingest] {recipe.name}: {len(clips)} beats "
+          f"({talk} lip-sync, {len(clips) - talk} motion)")
 
 
 def _resolve_recipe(job_dir: str, first_frame: str, screenplay: str) -> AdTypeRecipe:
@@ -88,7 +129,7 @@ def _resolve_recipe(job_dir: str, first_frame: str, screenplay: str) -> AdTypeRe
     label = (c.get("subject") or "other").strip().lower().replace(" ", "_")[:24]
     print(f"[ingest] outside the presets -> generic recipe '{label}' "
           f"(lip-sync={c['needs_lipsync']}): {c.get('reason', '')}")
-    return generic_recipe(bool(c["needs_lipsync"]), label)
+    return generic_recipe(label)
 
 
 def _classify(frame_path: str, screenplay: str) -> dict:
@@ -188,11 +229,12 @@ _TOOL = {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "vo_line": {"type": "string", "description": "Exact dialogue/narration spoken in this beat."},
+                        "vo_line": {"type": "string", "description": "Exact dialogue/narration spoken in this beat (empty if none)."},
+                        "on_camera_speech": {"type": "boolean", "description": "True ONLY if a visible character speaks this beat ON camera (dialogue -> lip-sync). False for silent action, SFX-only, or off-camera VO/narration (e.g. end-card voiceover)."},
                         "motion_prompt": {"type": "string", "description": "The action/camera movement in this beat, 1-2 sentences."},
                         "duration_seconds": {"type": "number", "description": "Beat length in seconds, from the screenplay's timing if present."},
                     },
-                    "required": ["vo_line", "motion_prompt", "duration_seconds"],
+                    "required": ["vo_line", "on_camera_speech", "motion_prompt", "duration_seconds"],
                 },
             }
         },
@@ -212,7 +254,9 @@ def _parse_beats(screenplay: str, n_frames: int, director_focus: str) -> list[di
         "You parse an already-finished screenplay into beats. Do NOT invent or add "
         f"content. Context: {director_focus} The storyboard has {n_frames} frames, one "
         f"per beat — return EXACTLY {n_frames} beats in screenplay order, each matching "
-        "its frame. Extract the exact spoken line, the action, and the timing."
+        "its frame. Extract the exact spoken line, the action, the timing, and mark "
+        "on_camera_speech (does a visible character speak this beat, vs silent action / "
+        "off-camera VO)."
     )
     resp = client.messages.create(
         model=__import__("config").DIRECTOR_MODEL,

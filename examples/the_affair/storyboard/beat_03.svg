@@ -1,0 +1,18 @@
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="200" fill="#f3e7cd"/>
+          <rect x="0" y="155" width="320" height="45" fill="#e3d2ac"/>
+          <line x1="0" y1="155" x2="320" y2="155" stroke="#2a1a14" stroke-width="2"/>
+          <!-- woman turned, looking over shoulder -->
+          <circle cx="150" cy="64" r="18" fill="#f0c9a0" stroke="#2a1a14" stroke-width="2.4"/>
+          <path d="M132 60 q18 -22 36 0" fill="#2a1a14"/>
+          <!-- wide eyes -->
+          <circle cx="156" cy="64" r="3" fill="#2a1a14"/>
+          <circle cx="146" cy="64" r="3" fill="#2a1a14"/>
+          <path d="M134 155 q16 -66 30 -66 q16 0 16 32 l0 34" fill="#6e1423" stroke="#2a1a14" stroke-width="2.4"/>
+          <!-- bowl hidden behind back -->
+          <ellipse cx="196" cy="120" rx="20" ry="8" fill="#7a6a55" stroke="#2a1a14" stroke-width="2.2"/>
+          <path d="M176 120 a20 11 0 0 0 40 0" fill="#3a2c1a" stroke="#2a1a14" stroke-width="2.2"/>
+          <path d="M180 96 q24 12 16 26" fill="none" stroke="#2a1a14" stroke-width="2.4" stroke-linecap="round"/>
+          <!-- motion / surprise marks -->
+          <path d="M186 44 l8 -10 M200 50 l11 -7" stroke="#e9a13c" stroke-width="3" stroke-linecap="round"/>
+        </svg>

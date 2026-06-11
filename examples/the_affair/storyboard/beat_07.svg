@@ -1,0 +1,17 @@
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="200" fill="#f3e7cd"/>
+          <rect x="0" y="150" width="320" height="50" fill="#e3d2ac"/>
+          <line x1="0" y1="150" x2="320" y2="150" stroke="#2a1a14" stroke-width="2"/>
+          <!-- two heads leaning over bowl (soft focus, smaller) -->
+          <circle cx="78" cy="78" r="15" fill="#f0c9a0" stroke="#2a1a14" stroke-width="2.2" opacity=".55"/>
+          <circle cx="118" cy="78" r="15" fill="#e0b487" stroke="#2a1a14" stroke-width="2.2" opacity=".55"/>
+          <ellipse cx="98" cy="120" rx="22" ry="8" fill="#8a7860" stroke="#2a1a14" stroke-width="2" opacity=".55"/>
+          <!-- masala pack hero, in focus -->
+          <rect x="196" y="78" width="64" height="84" rx="4" fill="#6e1423" stroke="#2a1a14" stroke-width="2.6"/>
+          <rect x="196" y="98" width="64" height="26" fill="#e9a13c"/>
+          <text x="228" y="116" font-family="Georgia" font-size="12" fill="#2a1a14" text-anchor="middle" font-weight="bold">MASALA</text>
+          <circle cx="228" cy="146" r="9" fill="none" stroke="#f2c879" stroke-width="2"/>
+          <!-- push-in arrows -->
+          <path d="M168 70 l16 8 M168 86 l16 -8" stroke="#6e1423" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M288 70 l-16 8 M288 86 l-16 -8" stroke="#6e1423" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>

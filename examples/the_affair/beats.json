@@ -1,0 +1,90 @@
+[
+  {
+    "index": 0,
+    "timecode": "0:00–0:03",
+    "duration": 3.0,
+    "shot_type": "WIDE · static",
+    "speaker": "SFX",
+    "vo_line": "",
+    "motion_prompt": "Meera lifts the lid; steam & tiny hearts rise. Love-at-first-sight gaze.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_01.png"
+  },
+  {
+    "index": 1,
+    "timecode": "0:03–0:05",
+    "duration": 2.0,
+    "shot_type": "CLOSE-UP · static",
+    "speaker": "MEERA",
+    "vo_line": "Uff… tum kitne perfect ho.",
+    "motion_prompt": "Blushing, eyes half-closed, she whispers sweet nothings to the bowl.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_02.png"
+  },
+  {
+    "index": 2,
+    "timecode": "0:05–0:07",
+    "duration": 2.0,
+    "shot_type": "WIDE · whip to door",
+    "speaker": "SFX",
+    "vo_line": "",
+    "motion_prompt": "Footsteps. She startles, hides the bowl behind her back — way too casual.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_03.png"
+  },
+  {
+    "index": 3,
+    "timecode": "0:07–0:10",
+    "duration": 3.0,
+    "shot_type": "MEDIUM · door frame",
+    "speaker": "RAJ",
+    "vo_line": "Yeh… kisse baatein ho rahi thi?",
+    "motion_prompt": "Raj leans in, brow cocked, thoroughly suspicious.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_04.png"
+  },
+  {
+    "index": 4,
+    "timecode": "0:10–0:13",
+    "duration": 3.0,
+    "shot_type": "TWO-SHOT · static",
+    "speaker": "MEERA",
+    "vo_line": "K-koi nahi!",
+    "motion_prompt": "Raj plucks the bowl out — aloo bhindi revealed. Meera throws her hands up, caught.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_05.png"
+  },
+  {
+    "index": 5,
+    "timecode": "0:13–0:16",
+    "duration": 3.0,
+    "shot_type": "CLOSE-UP · static",
+    "speaker": "RAJ",
+    "vo_line": "Ab… main bhi iske pyaar mein.",
+    "motion_prompt": "He tastes one bite. Beat. Eyes blow wide — a heart blooms. He's done for.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_06.png"
+  },
+  {
+    "index": 6,
+    "timecode": "0:16–0:18",
+    "duration": 2.0,
+    "shot_type": "PUSH-IN · rack focus",
+    "speaker": "MUSIC",
+    "vo_line": "",
+    "motion_prompt": "Couple blurs out as camera glides to the real \"other man\" — the masala pack.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_07.png"
+  },
+  {
+    "index": 7,
+    "timecode": "0:18–0:20",
+    "duration": 2.0,
+    "shot_type": "END CARD · logo lock-up",
+    "speaker": "VO",
+    "vo_line": "[BRAND] Masala — aisa swaad, ki pyaar ho jaaye.",
+    "motion_prompt": "Pack centre frame, logo lands, tagline supers in.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "examples/the_affair/storyboard/beat_08.png"
+  }
+]

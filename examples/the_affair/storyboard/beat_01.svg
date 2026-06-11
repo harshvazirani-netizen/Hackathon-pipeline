@@ -1,0 +1,19 @@
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="200" fill="#f3e7cd"/>
+          <rect x="0" y="150" width="320" height="50" fill="#e3d2ac"/>
+          <line x1="0" y1="150" x2="320" y2="150" stroke="#2a1a14" stroke-width="2"/>
+          <!-- window -->
+          <rect x="30" y="34" width="70" height="56" fill="#cfe3ef" stroke="#2a1a14" stroke-width="2"/>
+          <line x1="65" y1="34" x2="65" y2="90" stroke="#2a1a14" stroke-width="2"/>
+          <line x1="30" y1="62" x2="100" y2="62" stroke="#2a1a14" stroke-width="2"/>
+          <!-- woman -->
+          <circle cx="190" cy="70" r="18" fill="#f0c9a0" stroke="#2a1a14" stroke-width="2.4"/>
+          <path d="M172 66 q18 -22 36 0" fill="#2a1a14"/>
+          <path d="M176 150 q14 -64 28 -64 q14 0 14 30 l0 34" fill="#6e1423" stroke="#2a1a14" stroke-width="2.4"/>
+          <path d="M196 96 q26 6 30 26" fill="none" stroke="#2a1a14" stroke-width="2.4" stroke-linecap="round"/>
+          <!-- kadhai + steam hearts -->
+          <ellipse cx="232" cy="128" rx="26" ry="9" fill="#7a6a55" stroke="#2a1a14" stroke-width="2.4"/>
+          <path d="M206 128 a26 14 0 0 0 52 0" fill="#3a2c1a" stroke="#2a1a14" stroke-width="2.4"/>
+          <path d="M224 112 c-6 -10 -16 -2 0 8 c16 -10 6 -18 0 -8" fill="#e9a13c"/>
+          <path d="M244 104 c-5 -8 -13 -1 0 7 c13 -8 5 -15 0 -7" fill="#e9a13c"/>
+        </svg>
