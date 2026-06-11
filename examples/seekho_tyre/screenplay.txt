@@ -1,0 +1,16 @@
+SEEKHO — TYRE JUGAAD AD (Raju), ~60s, 9 scenes. Type: ai_human. VO language: Hindi.
+
+CHARACTER: Raju — Indian man, young adult, lean, sun-weathered, short black hair,
+light stubble, plain white shirt, dark trousers, dusty working hands. Posture arc:
+hunched early → straight by the end. He narrates his whole story (VO); scenes 2, 6, 9
+he addresses camera directly (lip-sync).
+
+S1 [0–2.2]  VO: Yeh phenka hua tractor ka tyre dikh raha hai?  TEXT: Rs 60,000/mahina — is kachre se
+S2 [2.2–4.5] VO: Ismein har mahine saath hazaar rupaye chhupe hain.  (text continues)
+S3 [4.5–10]  VO: Log mujhe kabaadi bolte the — kachra bech ke kya kar lega zindagi bhar.  TEXT: —
+S4 [10–21]   VO: Par hisaab suno: ek scrap tyre Rs 120 … din ke paanch, mahine ke dedh sau.  TEXT: Rs 120 → Rs 600–1000 ; 5/din × 30 = 150/mahina
+S5 [21–29]   VO: Sochoge shuru kahan se … YouTube par dhoondta raha — bas yahi galti kar di.  TEXT: YouTube = aadhi-adhuri jaankari
+S6 [29–41]   VO: Phir Seekho app mila … shuruaat sirf ek rupaye ke trial se.  TEXT: Seekho → Business Ideas ; Sirf Rs 1 ka trial
+S7 [41–45]   VO: Pehla naand banaya … chhe sau rupaye mile.  TEXT: Pehla order Rs 600
+S8 [45–54.5] VO: Teen mahine baad … Kismat kharab nahi thi — direction galat thi.  TEXT: Dundaraka Mandi ; Rs 60–70,000/mahina
+S9 [54.5–60] VO: Tumhare aas-paas bhi kabaad … Seekho app download karo.  TEXT: Install karo · Seekho app

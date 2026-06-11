@@ -24,9 +24,12 @@ def main():
     args = ap.parse_args()
 
     recipe, clips = ingest_mod.ingest(args.job)
+    import localize as localize_mod
+    localize_mod.localize(clips)                     # spoken language default (Hindi)
+    add_caps = _job_flag(args.job, "add_captions", True)  # off when frames already carry captions
     clip = clips[args.beat - 1]
     print(f"\nbeat {args.beat}: route={'lipsync' if clip.lipsync else 'motion'}, "
-          f"speaker={clip.speaker or '-'}, dur={clip.duration:.0f}s")
+          f"speaker={clip.speaker or '-'}, dur={clip.duration:.0f}s, captions={add_caps}")
     print(f"line: {clip.vo_line or '—'}")
 
     out = os.path.join(config.WORK_DIR, f"scene-test-{os.path.basename(args.job)}-{args.beat:02d}")
@@ -40,9 +43,9 @@ def main():
         print("[VO] ...")
         word_caps = voiceover.synthesize_per_beat([clip], out, vmap)
 
-    # time the screenplay text to the voice (scene-relative)
+    # time the screenplay text to the voice (scene-relative) — only if captions are on
     timed = []
-    if clip.overlay_text:
+    if add_caps and clip.overlay_text:
         import captions as captions_mod
         timed = captions_mod.align_overlay([clip], word_caps)
 
@@ -65,14 +68,21 @@ def main():
     # Always deliver the FINAL version: a motion beat with a VO line gets its
     # voice merged over the clip via Shotstack (sandbox = free). Lip-sync beats
     # already carry their voice.
-    if timed or clip.overlay_text or ((not clip.lipsync) and clip.audio_path):
-        print("[MERGE] final (VO + timed captions) via Shotstack, free ...")
+    cap_text = clip.overlay_text if add_caps else ""
+    if timed or cap_text or ((not clip.lipsync) and clip.audio_path):
+        print("[MERGE] final via Shotstack, free ...")
         local = _merge(video_url, clip.audio_path if not clip.lipsync else None,
                        clip.duration, os.path.join(out, "final.mp4"),
-                       captions=timed or None,
-                       caption=clip.overlay_text)
+                       captions=timed or None, caption=cap_text)
 
     print(f"\n✅ scene done: {local}\n   raw: {out}/raw.json")
+
+
+def _job_flag(job_dir: str, key: str, default):
+    p = os.path.join(job_dir, "job.json")
+    if os.path.exists(p):
+        return json.load(open(p)).get(key, default)
+    return default
 
 
 def _merge(video_url: str, audio_path: str | None, duration: float, dest: str,
