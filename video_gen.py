@@ -70,11 +70,15 @@ def image_to_video(image_url: str, motion_prompt: str,
     recipe's animator and is required."""
     if not model_id:
         raise ValueError("image_to_video requires model_id (from the recipe).")
+    # Kling 2.6 I2V schema (verified on fal): start_image_url + prompt (required),
+    # duration enum "5"/"10" only, NO aspect_ratio, generate_audio default true.
+    # Motion clips are silent here (SFX/VO added in assembly), so audio is off; the
+    # clip is trimmed to the beat's timeline length during assembly.
     args = {
-        "image_url": image_url,
-        "prompt": motion_prompt,
-        "duration": str(duration),
-        "aspect_ratio": config.ASPECT_RATIO,
+        "start_image_url": image_url,
+        "prompt": motion_prompt or "subtle, natural motion; keep the framing steady",
+        "duration": "10" if int(duration) > 5 else "5",
+        "generate_audio": False,
     }
     result = _run(model_id, args)
     return _first_media_url(result, kind="video"), result

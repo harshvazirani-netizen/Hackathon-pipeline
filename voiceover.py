@@ -22,17 +22,20 @@ from schema import AudioTrack, Caption
 
 # ---- per-beat (lip-sync types) -----------------------------------------------
 
-def synthesize_per_beat(clips, work_dir: str) -> list[Caption]:
+def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> list[Caption]:
     """TTS each beat's line to its own file; set clip.audio_path + clip.duration.
+    voice_map ({speaker: voice_id}, from casting.cast) picks each beat's voice.
     Returns captions with absolute timeline positions."""
     os.makedirs(work_dir, exist_ok=True)
+    voice_map = voice_map or {}
     captions: list[Caption] = []
     offset = 0.0
     for clip in clips:
         if not clip.vo_line:
             offset += clip.duration
             continue
-        audio_b64, alignment = _tts(clip.vo_line)
+        voice = voice_map.get(clip.speaker or "VO")
+        audio_b64, alignment = _tts(clip.vo_line, voice_id=voice)
         path = os.path.join(work_dir, f"vo_{clip.index:02d}.mp3")
         with open(path, "wb") as f:
             f.write(base64.b64decode(audio_b64))
@@ -64,13 +67,13 @@ def synthesize(clips, out_path: str) -> tuple[AudioTrack, list[Caption]]:
 
 # ---- shared -------------------------------------------------------------------
 
-def _tts(text: str):
+def _tts(text: str, voice_id: str | None = None):
     from elevenlabs.client import ElevenLabs  # lazy
     if not os.getenv("ELEVENLABS_API_KEY"):
         raise SystemExit("ELEVENLABS_API_KEY not set. Add it to .env.")
     client = ElevenLabs()
     resp = client.text_to_speech.convert_with_timestamps(
-        voice_id=config.ELEVENLABS_VOICE_ID,
+        voice_id=voice_id or config.ELEVENLABS_VOICE_ID,
         model_id=config.ELEVENLABS_MODEL,
         text=text,
     )

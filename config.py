@@ -21,7 +21,7 @@ DIRECTOR_MODEL = "claude-opus-4-8"   # ingest: parse screenplay -> beats
 VISION_MODEL = "claude-opus-4-8"     # QA layer 3: score frames vs the recipe's rubric
 
 # --- ElevenLabs (TTS) ----------------------------------------------------------
-ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"   # default "Rachel"; pick yours in the dashboard
+ELEVENLABS_VOICE_ID = "HI0kneBmwaZBJsViQ5rD"   # user's own voice (free-tier usable)
 ELEVENLABS_MODEL = "eleven_multilingual_v2"
 
 # --- Assembly (Shotstack; Creatomate swappable behind assembly.py) -------------
@@ -51,3 +51,8 @@ QA_LOG = os.path.join(LOGS_DIR, "qa_scores.jsonl")
 
 for _d in (OUTPUT_DIR, WORK_DIR, SHIPPED_DIR, LOGS_DIR, DEAD_LETTER_DIR):
     os.makedirs(_d, exist_ok=True)
+
+# Load .env from the project dir (cwd-independent) so EVERY entrypoint that
+# imports config has the API keys available, regardless of import order.
+from dotenv import load_dotenv as _load_dotenv  # noqa: E402
+_load_dotenv(os.path.join(PROJECT_DIR, ".env"))

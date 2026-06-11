@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 class Clip(BaseModel):
     index: int
     vo_line: str = ""                          # dialogue/narration for this beat
+    speaker: str = ""                          # who says it (EXPERT/HOST/VO/character name) -> voice casting
     lipsync: bool = False                      # True = a character speaks ON camera this beat
     motion_prompt: str = ""                    # action for this beat (from screenplay)
     duration: float = 0.0                      # screenplay timing; lip-sync beats overwrite w/ audio length

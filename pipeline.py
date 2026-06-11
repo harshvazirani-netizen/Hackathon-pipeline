@@ -22,6 +22,7 @@ import traceback
 
 import config
 import ingest as ingest_mod
+import casting
 import generate
 import voiceover
 import assembly
@@ -41,6 +42,16 @@ def run(job_dir: str) -> AssetBundle | None:
                          vision_rubric=recipe.vision_rubric,
                          script=f"(job: {job_dir})", clips=clips)
 
+    # Voice casting: each screenplay speaker gets their own ElevenLabs voice
+    # (manual job.json override > cached voices.json > Claude picks from the pool).
+    print("[CAST] voices per speaker ...")
+    screenplay = ""
+    sp = os.path.join(job_dir, "screenplay.txt")
+    if os.path.exists(sp):
+        with open(sp) as f:
+            screenplay = f.read()
+    voice_map = casting.cast(job_dir, bundle.clips, screenplay)
+
     last_reason = "unknown"
     for attempt in range(1, config.MAX_GENERATION_RETRIES + 2):
         print(f"\n--- attempt {attempt}/{config.MAX_GENERATION_RETRIES + 1} ---")
@@ -48,7 +59,7 @@ def run(job_dir: str) -> AssetBundle | None:
             # Per-beat VO first: lip-sync beats need their audio to drive the mouth;
             # motion beats with a line (e.g. end-card VO) get audio for an overlay.
             print("[VO] per-beat ...")
-            bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work)
+            bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work, voice_map)
 
             print("[GEN] per-beat (lip-sync vs motion) ...")
             generate.generate_clips(bundle.clips, recipe, ad_id)

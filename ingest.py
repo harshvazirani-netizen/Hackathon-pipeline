@@ -60,6 +60,7 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
         clips.append(Clip(
             index=i,
             vo_line=b.get("vo_line", ""),
+            speaker=b.get("speaker", "") or "",
             lipsync=bool(b.get("on_camera_speech", False)),
             motion_prompt=b.get("motion_prompt", ""),
             duration=float(b.get("duration_seconds", 5) or 5),
@@ -77,14 +78,26 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
     clips = [Clip(
         index=b.get("index", i),
         vo_line=b.get("vo_line", ""),
+        speaker=b.get("speaker", "") or "",
         lipsync=bool(b.get("on_camera_speech", False)),
         motion_prompt=b.get("motion_prompt", ""),
         duration=float(b.get("duration", 5) or 5),
-        storyboard_image_path=b.get("storyboard_image_path"),
+        storyboard_image_path=_resolve_frame(job_dir, b.get("storyboard_image_path")),
     ) for i, b in enumerate(beats)]
     print(f"[ingest] beats.json manifest ({len(clips)} beats; no Claude needed)")
     _summarise(recipe, clips)
     return recipe, clips
+
+
+def _resolve_frame(job_dir: str, p: str | None) -> str | None:
+    """Frame paths in beats.json may be relative to wherever the adapter ran.
+    Resolve to <job_dir>/storyboard/<basename> so the pipeline works from any cwd."""
+    if not p:
+        return p
+    if os.path.isabs(p) and os.path.exists(p):
+        return p
+    cand = os.path.join(job_dir, "storyboard", os.path.basename(p))
+    return cand if os.path.exists(cand) else p
 
 
 def _recipe_from_jobjson(job_dir: str) -> AdTypeRecipe:
@@ -230,6 +243,7 @@ _TOOL = {
                     "type": "object",
                     "properties": {
                         "vo_line": {"type": "string", "description": "Exact dialogue/narration spoken in this beat (empty if none)."},
+                        "speaker": {"type": "string", "description": "WHO speaks this beat, exactly as named in the screenplay (e.g. MEERA, RAJ, EXPERT, HOST). Use 'VO' for off-camera narration. Empty if silent."},
                         "on_camera_speech": {"type": "boolean", "description": "True ONLY if a visible character speaks this beat ON camera (dialogue -> lip-sync). False for silent action, SFX-only, or off-camera VO/narration (e.g. end-card voiceover)."},
                         "motion_prompt": {"type": "string", "description": "The action/camera movement in this beat, 1-2 sentences."},
                         "duration_seconds": {"type": "number", "description": "Beat length in seconds, from the screenplay's timing if present."},

@@ -1,0 +1,2 @@
+HTTPStatusError: Client error '403 Forbidden' for url 'https://rest.fal.ai/storage/auth/token?storage_type=fal-cdn-v3'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403

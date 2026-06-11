@@ -1,0 +1,79 @@
+[
+  {
+    "index": 0,
+    "timecode": "0:00-0:04",
+    "duration": 4,
+    "speaker": "EXPERT",
+    "vo_line": "It's not the direction — it's the SPEED. And speed is scary.",
+    "motion_prompt": "Tight close-up of the expert mid-sentence at the mic, slightly shocked expression, subtle head movement, podcast lighting.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "storyboard/frame_1.jpg",
+    "overlay_text": "Even 25-yr experts didn't see this coming 👇"
+  },
+  {
+    "index": 1,
+    "timecode": "0:04-0:09",
+    "duration": 5,
+    "speaker": "VO",
+    "vo_line": "Gold was supposed to hit ₹4,200 in 18 months. It got there in 6.",
+    "motion_prompt": "Animated gold price chart rallying steeply upward, candles rising almost vertically, gold bars gleaming in the foreground, slow push-in.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "storyboard/frame_2.jpg",
+    "overlay_text": "18-month target ✅ hit in 6 months"
+  },
+  {
+    "index": 2,
+    "timecode": "0:09-0:16",
+    "duration": 7,
+    "speaker": "VO",
+    "vo_line": "We were predicting a 35 to 40 percent rally in a year. It did 50 to 60 percent in under 8 months.",
+    "motion_prompt": "Stacked interview two-shot: host listening intently on top, expert speaking below; gentle handheld sway, podcast studio ambience.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "storyboard/frame_3.jpg",
+    "overlay_text": "Expected: 35-40% 📈 | Actual: 50-60% 🔥"
+  },
+  {
+    "index": 3,
+    "timecode": "0:16-0:25",
+    "duration": 9,
+    "speaker": "EXPERT",
+    "vo_line": "When something goes up this fast, at some point the momentum STOPS. And when it stops... it falls.",
+    "motion_prompt": "Expert close-up leaning forward, conversational urgent energy, direct eye contact.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "storyboard/frame_5.jpg",
+    "overlay_text": "The scary part nobody's talking about ⚠️"
+  },
+  {
+    "index": 4,
+    "timecode": "0:25-0:35",
+    "duration": 10,
+    "speaker": "HOST",
+    "vo_line": "Everyone's asking: should I buy gold right now? I want to — but what if it drops 20 percent tomorrow?",
+    "motion_prompt": "Stacked two-shot: host reacting visibly, nodding with concern, expert pausing below; subtle camera drift.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "storyboard/frame_4.jpg",
+    "overlay_text": "Should you buy gold RIGHT NOW? 🤔"
+  },
+  {
+    "index": 5,
+    "timecode": "0:35-0:42",
+    "duration": 7,
+    "speaker": "EXPERT",
+    "vo_line": "A 20 percent correction? That's absolutely a possibility.",
+    "motion_prompt": "Expert looks directly into camera, calm but serious delivery, minimal movement.",
+    "on_camera_speech": true,
+    "storyboard_image_path": "storyboard/frame_5.jpg",
+    "overlay_text": "His honest answer 👇 (save this)"
+  },
+  {
+    "index": 6,
+    "timecode": "0:42-0:48",
+    "duration": 6,
+    "speaker": "VO",
+    "vo_line": "Follow for our full breakdown on what to actually do with gold right now.",
+    "motion_prompt": "Glossy gold bars stacked, soft dreamy blur transition, slow rotation glint, end-card mood.",
+    "on_camera_speech": false,
+    "storyboard_image_path": "storyboard/frame_8.jpg",
+    "overlay_text": "Full breakdown in bio 🔗 | Save this before it moves again"
+  }
+]
