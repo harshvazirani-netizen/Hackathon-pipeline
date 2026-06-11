@@ -67,9 +67,12 @@ def cast(job_dir: str, clips, screenplay: str = "") -> dict:
         frames_by = {s: _speaker_frame(s, clips) for s in todo}
 
         if pool and os.getenv("ANTHROPIC_API_KEY"):
-            for s, a in _claude_cast(todo, clips, screenplay, pool, lang_by, frames_by).items():
-                a["voice_id"] = _materialise(a["voice_id"], pool)
-                record[s] = a
+            try:
+                for s, a in _claude_cast(todo, clips, screenplay, pool, lang_by, frames_by).items():
+                    a["voice_id"] = _materialise(a["voice_id"], pool)
+                    record[s] = a
+            except Exception as e:
+                print(f"[cast] ⚠ vision casting skipped ({type(e).__name__}); default voice. {str(e)[:100]}")
         for s in todo:                                  # fallback for anything unassigned
             record.setdefault(s, {"voice_id": config.ELEVENLABS_VOICE_ID, "source": "fallback"})
 

@@ -24,7 +24,12 @@ def localize(clips, target: str | None = None) -> None:
     if not todo or not os.getenv("ANTHROPIC_API_KEY"):
         return
 
-    translations = _translate([c.vo_line for c in todo])
+    try:
+        translations = _translate([c.vo_line for c in todo])
+    except Exception as e:
+        print(f"[localize] ⚠ translation skipped ({type(e).__name__}); using lines as written. "
+              f"{str(e)[:120]}")
+        return
     for c, hi in zip(todo, translations):
         if hi:
             c.vo_original = c.vo_line
