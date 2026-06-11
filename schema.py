@@ -18,12 +18,21 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class TextCue(BaseModel):
+    """One on-screen text cue with its own timing, RELATIVE to the scene start."""
+    text: str
+    start: float = 0.0          # seconds from the scene's start
+    end: float = 0.0
+    position: str = "bottom"    # "bottom" | "top" (e.g. location pill)
+
+
 class Clip(BaseModel):
     index: int
     vo_line: str = ""                          # dialogue/narration spoken in this beat (post-localization)
     vo_original: str = ""                      # the source line before any translation
     speaker: str = ""                          # who says it (EXPERT/HOST/VO/character name) -> voice casting
-    overlay_text: str = ""                     # screenplay 'text:' -> bottom caption for this beat's duration
+    overlay_text: str = ""                     # (legacy) single caption for the whole beat
+    text_cues: list[TextCue] = Field(default_factory=list)  # timed text cues within this scene (cue sheet)
     lipsync: bool = False                      # True = a character speaks ON camera this beat
     low_motion: bool = False                   # near-static render to keep on-frame text/logos/packaging legible
     motion_prompt: str = ""                    # action for this beat (from screenplay)
@@ -89,6 +98,7 @@ class QAResult(BaseModel):
 class AssetBundle(BaseModel):
     ad_id: str
     ad_type: str                           # recipe name (preset or auto-detected label)
+    add_captions: bool = True              # render text overlays (off when frames carry burned captions)
     vision_rubric: str = ""                # set from the recipe; used by QA layer 3
     script: str = ""
     character_bible: str = ""              # (legacy) hero character desc

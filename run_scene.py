@@ -43,11 +43,16 @@ def main():
         print("[VO] ...")
         word_caps = voiceover.synthesize_per_beat([clip], out, vmap)
 
-    # time the screenplay text to the voice (scene-relative) — only if captions are on
-    timed = []
-    if add_caps and clip.overlay_text:
+    # Build timed text cues for this scene (scene-relative). Prefer the cue sheet
+    # (clip.text_cues, each with its own time); else align a single overlay_text to voice.
+    cues = []
+    if add_caps and clip.text_cues:
+        cues = [{"text": tc.text, "start": tc.start, "length": max(tc.end - tc.start, 0.5),
+                 "position": tc.position} for tc in clip.text_cues]
+    elif add_caps and clip.overlay_text:
         import captions as captions_mod
-        timed = captions_mod.align_overlay([clip], word_caps)
+        cues = [{"text": c.text, "start": c.start, "length": c.end - c.start, "position": "bottom"}
+                for c in captions_mod.align_overlay([clip], word_caps)]
 
     print("[GEN] uploading frame ...")
     clip.start_frame_url = video_gen.upload_file(clip.storyboard_image_path)
@@ -68,12 +73,10 @@ def main():
     # Always deliver the FINAL version: a motion beat with a VO line gets its
     # voice merged over the clip via Shotstack (sandbox = free). Lip-sync beats
     # already carry their voice.
-    cap_text = clip.overlay_text if add_caps else ""
-    if timed or cap_text or ((not clip.lipsync) and clip.audio_path):
+    if cues or ((not clip.lipsync) and clip.audio_path):
         print("[MERGE] final via Shotstack, free ...")
         local = _merge(video_url, clip.audio_path if not clip.lipsync else None,
-                       clip.duration, os.path.join(out, "final.mp4"),
-                       captions=timed or None, caption=cap_text)
+                       clip.duration, os.path.join(out, "final.mp4"), cues=cues)
 
     print(f"\n✅ scene done: {local}\n   raw: {out}/raw.json")
 
@@ -86,16 +89,15 @@ def _job_flag(job_dir: str, key: str, default):
 
 
 def _merge(video_url: str, audio_path: str | None, duration: float, dest: str,
-           captions: list | None = None, caption: str = "") -> str:
+           cues: list | None = None) -> str:
     import assembly
     import requests
     length = round(duration or 10, 3)
     tracks = []
-    if captions:  # timed segments (preferred)
+    if cues:  # timed text cues, each at its own time/position
         tracks.append({"clips": [
-            assembly._title(c.text, c.start, c.end - c.start) for c in captions]})
-    elif caption:  # full-scene fallback
-        tracks.append({"clips": [assembly._title(caption, 0, length)]})
+            assembly._title(c["text"], c["start"], c["length"], c.get("position", "bottom"))
+            for c in cues]})
     if audio_path:
         vo_url = assembly._ingest_upload(audio_path)
         tracks.append({"clips": [{"asset": {"type": "audio", "src": vo_url},

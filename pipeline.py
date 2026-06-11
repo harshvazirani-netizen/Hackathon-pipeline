@@ -38,7 +38,8 @@ def run(job_dir: str) -> AssetBundle | None:
     talk = sum(1 for c in clips if c.lipsync)
     print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type}; {talk} lip-sync + {len(clips) - talk} motion beats)\n{'=' * 60}")
 
-    bundle = AssetBundle(ad_id=ad_id, ad_type=ad_type,
+    add_caps = _job_flag(job_dir, "add_captions", True)
+    bundle = AssetBundle(ad_id=ad_id, ad_type=ad_type, add_captions=add_caps,
                          vision_rubric=recipe.vision_rubric,
                          script=f"(job: {job_dir})", clips=clips)
 
@@ -66,9 +67,13 @@ def run(job_dir: str) -> AssetBundle | None:
             print("[VO] per-beat ...")
             bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work, voice_map)
 
-            print("[CAPTIONS] timing screenplay text to the voice ...")
-            import captions as captions_mod
-            bundle.overlay_captions = captions_mod.align_overlay(bundle.clips, bundle.captions)
+            # Captions: cue-sheet text_cues are already timed (used directly by
+            # assembly). Only fall back to voice-alignment for legacy overlay_text.
+            if add_caps and not any(c.text_cues for c in bundle.clips) \
+                    and any(c.overlay_text for c in bundle.clips):
+                print("[CAPTIONS] timing screenplay text to the voice ...")
+                import captions as captions_mod
+                bundle.overlay_captions = captions_mod.align_overlay(bundle.clips, bundle.captions)
 
             print("[GEN] per-beat (lip-sync vs motion) ...")
             generate.generate_clips(bundle.clips, recipe, ad_id)
@@ -100,6 +105,15 @@ def run(job_dir: str) -> AssetBundle | None:
     path = _dead_letter(bundle, last_reason)
     print(f"\n💀 dead-letter after {config.MAX_GENERATION_RETRIES + 1} attempts: {path}\n   reason: {last_reason}")
     return None
+
+
+def _job_flag(job_dir: str, key: str, default):
+    import json
+    p = os.path.join(job_dir, "job.json")
+    if os.path.exists(p):
+        with open(p) as f:
+            return json.load(f).get(key, default)
+    return default
 
 
 def _ad_id(job_dir: str, ad_type: str) -> str:

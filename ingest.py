@@ -95,6 +95,7 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
         vo_line=b.get("vo_line", ""),
         speaker=b.get("speaker", "") or "",
         overlay_text=b.get("overlay_text", "") or b.get("text", ""),
+        text_cues=b.get("text_cues", []),
         lipsync=bool(b.get("on_camera_speech", False)),
         low_motion=_low_motion(b),
         motion_prompt=b.get("motion_prompt", ""),

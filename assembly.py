@@ -75,12 +75,21 @@ def _build_edit(bundle) -> dict:
 
     tracks = []
 
-    # Captions track (on top). Priority:
-    #   1. overlay_captions — screenplay 'text' segments TIMED to the voice
-    #   2. overlay_text     — full text for the whole beat (fallback)
-    #   3. word captions chunked from TTS timestamps (no screenplay text at all)
+    # Captions track (on top), only when captions are enabled. Priority:
+    #   1. text_cues       — cue-sheet text with its own timing (scene-relative -> absolute)
+    #   2. overlay_captions — text segments TIMED to the voice
+    #   3. overlay_text     — full text for the whole beat (fallback)
+    #   4. word captions chunked from TTS timestamps
     caption_clips = []
-    if bundle.overlay_captions:
+    if not bundle.add_captions:
+        caption_clips = []
+    elif any(c.text_cues for c in bundle.clips):
+        for ct in bundle.timing.clips:
+            clip = next(c for c in bundle.clips if c.index == ct.index)
+            for tc in clip.text_cues:
+                caption_clips.append(_title(tc.text, ct.start + tc.start,
+                                            tc.end - tc.start, tc.position))
+    elif bundle.overlay_captions:
         for cap in bundle.overlay_captions:
             caption_clips.append(_title(cap.text, cap.start, cap.end - cap.start))
     elif any(c.overlay_text for c in bundle.clips):
@@ -144,11 +153,11 @@ def _build_edit(bundle) -> dict:
     }
 
 
-def _title(text: str, start: float, length: float) -> dict:
-    """Bottom caption clip. 'small' size so long lines don't clip the 9:16 frame."""
+def _title(text: str, start: float, length: float, position: str = "bottom") -> dict:
+    """Caption clip. 'small' size so long lines don't clip the 9:16 frame."""
     return {
         "asset": {"type": "title", "text": _strip_emoji(text),
-                  "style": "subtitle", "size": "small", "position": "bottom"},
+                  "style": "subtitle", "size": "small", "position": position},
         "start": round(start, 3),
         "length": round(max(length, 0.5), 3),
     }

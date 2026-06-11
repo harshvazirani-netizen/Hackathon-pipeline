@@ -1,74 +1,83 @@
 [
   {
-    "index": 0, "timecode": "0:00-0:02.2", "duration": 2.5,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Yeh phenka hua tractor ka tyre dikh raha hai?",
-    "motion_prompt": "Extreme close-up, handheld, slow push from tyre tread into the dark hollow centre; a sun-weathered hand grips the rim and flips the tyre toward the lens in one confident jerk. Harsh midday sun, hard shadow. No face.",
+    "index": 0, "timecode": "0:00-0:04", "duration": 4.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "AIReal",
+    "vo_line": "Yeh phenka hua tractor tyre dikh raha hai? Isme har mahine ke 60,000 rupaye chhupe hain.",
+    "motion_prompt": "Extreme close-up in a kabaad yard, a weathered hand flips a dusty tractor tyre upright, dust puffs into sunlight; snap push-in to the tyre's hollow dark centre. Harsh daylight. No face.",
     "storyboard_image_path": "storyboard/frame_1.jpg",
-    "overlay_text": "Rs 60,000/mahina — is kachre se"
+    "text_cues": [{"text": "₹60,000 / mahina?", "start": 2.0, "end": 4.0, "position": "bottom"}]
   },
   {
-    "index": 1, "timecode": "0:02.2-0:04.5", "duration": 2.5,
-    "speaker": "RAJU", "on_camera_speech": true,
-    "vo_line": "Ismein har mahine saath hazaar rupaye chhupe hain.",
-    "motion_prompt": "Medium close-up of Raju, eye-level with a slight low hero angle, static; warm three-quarter backlight, real-location feel; knowing half-smile, one eyebrow up, direct eye contact; he knuckle-taps the tyre.",
+    "index": 1, "timecode": "0:04-0:09", "duration": 5.0,
+    "speaker": "RAJU", "on_camera_speech": true, "format": "face_ai",
+    "vo_line": "Log mujhe kabaadi bolte the — kachra bech ke kya karega zindagi bhar?",
+    "motion_prompt": "Protagonist (~30, kurta and gamchha, tier-3 look) to camera with a half-smile, tyre at his feet; a half-second flash of neighbours at a chai stall smirking as he hauls tyres past.",
     "storyboard_image_path": "storyboard/frame_2.jpg",
-    "overlay_text": ""
+    "text_cues": []
   },
   {
-    "index": 2, "timecode": "0:04.5-0:10", "duration": 5.5,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Log mujhe kabaadi bolte the — kachra bech ke kya kar lega zindagi bhar.",
-    "motion_prompt": "Handheld over-the-shoulder slow push, desaturated flashback look; bystanders smirk, one waves him off; his jaw tightens for a breath then firms again.",
+    "index": 2, "timecode": "0:09-0:17", "duration": 8.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "AIReal",
+    "vo_line": "Par hisaab suno. Ek scrap tyre — sirf 120 rupaye ka. Thodi mehnat, sau keelein, aur ban jaata hai pashuon ka naand — jo bikta hai 600 se 1,000 rupaye mein.",
+    "motion_prompt": "Hands hammer a ring of nails around the tyre rim; cut to the trough taking shape; cut to the finished naand with water splashed in and a buffalo drinking; slow tilt up the gleaming wet naand.",
     "storyboard_image_path": "storyboard/frame_3.jpg",
-    "overlay_text": ""
+    "text_cues": [
+      {"text": "Scrap tyre = ₹120", "start": 1.0, "end": 4.0, "position": "bottom"},
+      {"text": "Naand = ₹600–1,000", "start": 4.0, "end": 7.0, "position": "bottom"}
+    ]
   },
   {
-    "index": 3, "timecode": "0:10-0:21", "duration": 11.0,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Par hisaab suno: ek scrap tyre ek sau bees rupaye ka. Thodi mehnat, sau keelein — aur yahi banta hai pashuon ka naand, bikta hai chhe sau se hazaar rupaye mein. Din ke paanch banao, mahine ke dedh sau. Khud jod lo.",
-    "motion_prompt": "Top-down on a scrap-tyre pile with a snap zoom-out; macro inserts of a nail hammered and hands bending rubber; rupee value cards animate in on the beat. Raking side light so texture reads. Keep all numbers and text cards crisp.",
+    "index": 3, "timecode": "0:17-0:24", "duration": 7.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "AIReal",
+    "vo_line": "Din ke paanch banao, mahine ke dedh sau. Har gaon mein, har baade mein iski zaroorat hai — khud jod lo.",
+    "motion_prompt": "Wide of a row of five finished naands; he sets the fifth in line and wipes his hands, then turns straight to camera, one eyebrow up.",
     "storyboard_image_path": "storyboard/frame_4.jpg",
-    "overlay_text": "Rs 120 → Rs 600–1000\n5/din × 30 = 150/mahina"
+    "text_cues": [{"text": "5 / din → 150 / mahina", "start": 1.0, "end": 4.0, "position": "bottom"}]
   },
   {
-    "index": 4, "timecode": "0:21-0:29", "duration": 8.0,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Sochoge, shuru kahan se karun — badi machine chahiye? License? Main bhi ghanton YouTube par dhoondta raha — bas yahi galti kar di. Aadhi-adhuri videos, na process samajh aaya, na mandi ka.",
-    "motion_prompt": "Wide, lonely night shot of Raju on a charpai lit only by blue-white phone glow from below, background near black; slow creeping zoom-in to medium close-up (the tunnel); insert of a thumb skipping half-watched clips; ends with him locking eyes with the lens.",
+    "index": 4, "timecode": "0:24-0:32", "duration": 8.0,
+    "speaker": "RAJU", "on_camera_speech": true, "format": "face_ai",
+    "vo_line": "Socha, shuru karun, par kahan se? Machine? Maal? YouTube khola, aur bas, yahi galti ho gayi. Aadhi-adhuri videos, na process samajh aaya, na mandi ka raasta.",
+    "motion_prompt": "Room at night lit only by phone glow; he scrolls restlessly, jaw tight; quick push-in, he tosses the phone onto the cot and rubs his eyes.",
     "storyboard_image_path": "storyboard/frame_5.jpg",
-    "overlay_text": "YouTube = aadhi-adhuri jaankari"
+    "text_cues": [{"text": "YouTube ✗ confusion", "start": 2.0, "end": 5.0, "position": "bottom"}]
   },
   {
-    "index": 5, "timecode": "0:29-0:41", "duration": 12.0,
-    "speaker": "RAJU", "on_camera_speech": true,
-    "vo_line": "Phir Seekho app mila. Usme Business Ideas category mein A se Z poora process — kaunsa tyre, scrap sasta kahan milega, kaise jodna hai, mandi mein kaise bechna hai. Koi badi-badi baatein nahi ki do crore kama lo — bas saaf kaam ki baat. Aur shuruaat sirf ek rupaye ke trial se.",
-    "motion_prompt": "Match-cut to the same charpai in soft warm morning; Raju on a tripod, stable and calm, face evenly lit for the first time, a small genuine smile, counting points on his fingers; insert of the Seekho app Business Ideas screen zooming to the Rs 1 trial button.",
+    "index": 5, "timecode": "0:32-0:40", "duration": 8.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "app-screen composite",
+    "vo_line": "Phir Seekho app mila. Business Ideas category mein A se Z poora process — scrap sasta kahan milega, kaise banana hai, kahan bechna hai. Koi badi-badi baatein nahi, aur shuruaat? Sirf 1 rupaye ke trial se.",
+    "motion_prompt": "Insert: a hand holding a phone filling the frame, bright blank screen (app UI composited in post); his thumb hovers, then taps.",
     "storyboard_image_path": "storyboard/frame_6.jpg",
-    "overlay_text": "Seekho → Business Ideas\nSirf Rs 1 ka trial"
+    "text_cues": [
+      {"text": "Seekho → Business Ideas", "start": 1.0, "end": 4.0, "position": "bottom"},
+      {"text": "Sirf ₹1 ka trial", "start": 5.0, "end": 7.0, "position": "bottom"}
+    ]
   },
   {
-    "index": 6, "timecode": "0:41-0:45", "duration": 4.0,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Pehla naand banaya padosi ke baade ke liye — chhe sau rupaye mile.",
-    "motion_prompt": "Handheld traveling behind his shoulder to a neighbour's shed; close insert of cash notes pressed into his palm, held 1.5s; tilt up to his face; golden hour, warm rim, long shadows; a suppressed grin, shoulders drop an inch.",
+    "index": 6, "timecode": "0:40-0:47", "duration": 7.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "AIReal",
+    "vo_line": "Pehla naand banaya — padosi ke baade ke liye. 600 rupaye. Haath mein pehli kamai — apne khud ke kaam ki.",
+    "motion_prompt": "He passes the first naand over a low fence to a neighbour, cattle stir behind; insert of notes pressed into his palm, his fist closing slowly. Golden hour.",
     "storyboard_image_path": "storyboard/frame_7.jpg",
-    "overlay_text": "Pehla order Rs 600"
+    "text_cues": [{"text": "Pehla order: ₹600", "start": 3.0, "end": 5.0, "position": "bottom"}]
   },
   {
-    "index": 7, "timecode": "0:45-0:54.5", "duration": 9.5,
-    "speaker": "RAJU", "on_camera_speech": false,
-    "vo_line": "Teen mahine baad aaj Dundaraka mandi mein meri apni jagah hai, mahine ke saath-sattar hazaar. Maa ke liye pehli baar gehne liye. Ab log kabaadi nahi, kaarigar bolte hain. Kismat kharab nahi thi — direction galat thi.",
-    "motion_prompt": "Rhythmic jump-cut montage, each cut a time-jump: high wide of a stall stacked with feed-troughs, cattle feeding, a slow push on the mother's hands receiving a gift tilting up to her glassy-eyed face, then Raju confident at his stall greeting a customer. Bright market daylight; mother in soft window light.",
+    "index": 7, "timecode": "0:47-0:54", "duration": 7.0,
+    "speaker": "RAJU", "on_camera_speech": false, "format": "AIReal",
+    "vo_line": "Aaj teen mahine baad — Dundaraka mandi mein apni jagah hai, mahine ke 60 se 70 hazaar. Maa ke liye pehli baar gehne liye. Ab log kabaadi nahi, kaarigar bolte hain.",
+    "motion_prompt": "His mandi stall, naands stacked, two buyers inspecting; cut to mother at a doorway touching new earrings, smiling; back at the stall he straightens, chin lifts.",
     "storyboard_image_path": "storyboard/frame_8.jpg",
-    "overlay_text": "Dundaraka Mandi\nRs 60–70,000/mahina"
+    "text_cues": [
+      {"text": "Dundaraka Mandi", "start": 1.0, "end": 2.0, "position": "top"},
+      {"text": "₹60–70,000 / mahina", "start": 2.0, "end": 5.0, "position": "bottom"}
+    ]
   },
   {
-    "index": 8, "timecode": "0:54.5-1:00", "duration": 5.5,
-    "speaker": "RAJU", "on_camera_speech": true,
-    "vo_line": "Tumhare aas-paas bhi kabaad pada hai — usmein business chhupa hai. To install button par click karo aur Seekho app download karo.",
-    "motion_prompt": "Medium shot, slow zoom-out revealing the full stall — his empire in one frame; late golden hour, soft flare at the edge; Raju uncrosses his arms and points at the lens, warm but challenging, nods once and turns back to a customer; install UI slides up from the bottom third.",
+    "index": 8, "timecode": "0:54-1:00", "duration": 6.0,
+    "speaker": "RAJU", "on_camera_speech": true, "format": "face_ai",
+    "vo_line": "Tumhare aas-paas bhi kabaad pada hai — usme business chhupa hai. To install button par click karo aur Seekho app download karo.",
+    "motion_prompt": "He stands arms crossed, confident, slight smile; stall activity continues behind; slow push-in; a single nod to camera. Install-button UI added in post.",
     "storyboard_image_path": "storyboard/frame_9.jpg",
-    "overlay_text": "Install karo · Seekho app"
+    "text_cues": [{"text": "Install karo · Seekho app", "start": 1.0, "end": 6.0, "position": "bottom"}]
   }
 ]
