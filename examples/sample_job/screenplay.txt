@@ -1,0 +1,15 @@
+TITLE: VoltSave — "Pip Can't Sleep"
+FORMAT: 9:16 vertical, ~20s, 3 beats
+
+[BEAT 1 — 0:00–0:06]
+INT. COZY LIVING ROOM — NIGHT
+Pip, a tiny worried lightbulb, paces on a shelf, glancing at a climbing energy bill.
+VO: "Meet Pip. Pip can't sleep — the energy bill keeps climbing."
+
+[BEAT 2 — 0:06–0:13]
+Pip discovers VoltSave, a smart plug that glows reassuringly and powers things down.
+VO: "Until Pip found VoltSave — the smart plug that switches everything off when no one's home."
+
+[BEAT 3 — 0:13–0:20]
+Pip relaxes on the shelf, glowing softly; the energy bill shrinks.
+VO: "Now Pip sleeps soundly. Switch to VoltSave and let your home save itself."

@@ -1,15 +1,20 @@
 """
-End-to-end glue (Step 6): refined ad script -> finished vertical ad.
+End-to-end glue (Stage 6): a job folder -> finished vertical ad, routed by ad-type.
 
-  direct (Claude) -> generate clips (fal) -> voiceover (ElevenLabs)
-  -> assemble (Shotstack) -> QA gate -> ship | retry | dead-letter
+  ingest (parse screenplay + pair storyboard frames)  ->  get recipe
+  then, by recipe:
 
-V1: synchronous, one ad at a time, no queue. Retry the generation up to
-MAX_GENERATION_RETRIES on QA failure or error; then dead-letter with the reason.
+    lip-sync (ai_human, fruit_object):   AUDIO-FIRST
+       voiceover per-beat -> generate(frame + audio) -> assemble -> QA
+       (clips carry their own voice; no separate narration track)
+
+    pixar_animation:                     VISUAL-FIRST
+       generate(frame + motion) -> voiceover (narration) -> assemble -> QA
+
+  QA pass -> ship | QA fail -> retry generation | exhausted -> dead-letter.
 
 Usage:
-  python pipeline.py --script examples/sample_script.txt
-  python pipeline.py --text "Tired of tangled charging cables? ..."
+  python pipeline.py --job examples/sample_job
 """
 from __future__ import annotations
 
@@ -21,50 +26,48 @@ import time
 import traceback
 
 import config
-import script_director
+import ingest as ingest_mod
 import generate
 import voiceover
 import assembly
+from ad_types import get_recipe
 from qa import gate
-from schema import AssetBundle, OverlayMetadata
+from schema import AssetBundle, AudioTrack
 
 
-def run(script: str, ad_type: str = config.AD_TYPE) -> AssetBundle | None:
-    ad_id = _ad_id(script)
-    print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type})\n{'=' * 60}")
+def run(job_dir: str) -> AssetBundle | None:
+    ad_type, clips = ingest_mod.ingest(job_dir)
+    recipe = get_recipe(ad_type)
+    ad_id = _ad_id(job_dir, ad_type)
+    work = os.path.join(config.WORK_DIR, ad_id)
+    print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type}, lip-sync={recipe.needs_lipsync})\n{'=' * 60}")
 
-    # Step 1: creative direction (script -> storyboard)
-    print("[1/5] directing storyboard ...")
-    storyboard = script_director.direct(script)
-
-    bundle = AssetBundle(
-        ad_id=ad_id,
-        ad_type=ad_type,
-        script=script,
-        character_bible=storyboard.get("character_bible", ""),
-        overlay_metadata=OverlayMetadata(
-            hook_text=storyboard.get("hook_text"),
-            cta_text=storyboard.get("cta_text"),
-        ),
-    )
+    bundle = AssetBundle(ad_id=ad_id, ad_type=ad_type,
+                         script=f"(job: {job_dir})", clips=clips)
 
     last_reason = "unknown"
     for attempt in range(1, config.MAX_GENERATION_RETRIES + 2):
         print(f"\n--- attempt {attempt}/{config.MAX_GENERATION_RETRIES + 1} ---")
         try:
-            print("[2/5] generating clips ...")
-            bundle.clips = generate.generate_clips(storyboard, ad_id)
+            if recipe.needs_lipsync:
+                print("[VO] per-beat (drives lip-sync) ...")
+                bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work)
+                print("[GEN] talking clips (image + audio) ...")
+                generate.generate_clips(bundle.clips, recipe, ad_id)
+                bundle.audio = AudioTrack()  # clips already contain their voice
+            else:
+                print("[GEN] animating storyboard frames ...")
+                generate.generate_clips(bundle.clips, recipe, ad_id)
+                print("[VO] continuous narration ...")
+                bundle.audio, bundle.captions = voiceover.synthesize(
+                    bundle.clips, os.path.join(work, "vo.mp3"))
 
-            print("[3/5] voiceover ...")
-            vo_path = os.path.join(config.WORK_DIR, ad_id, "vo.mp3")
-            bundle.audio, bundle.captions = voiceover.synthesize(bundle.clips, vo_path)
             bundle.compute_timing()
 
-            print("[4/5] assembling ...")
-            out_mp4 = os.path.join(config.WORK_DIR, ad_id, "final.mp4")
-            bundle.rendered_path = assembly.render(bundle, out_mp4)
+            print("[ASM] rendering vertical MP4 ...")
+            bundle.rendered_path = assembly.render(bundle, os.path.join(work, "final.mp4"))
 
-            print("[5/5] QA gate ...")
+            print("[QA] gate ...")
             bundle.qa = gate.run_qa(bundle, bundle.rendered_path)
 
             if bundle.qa.passed:
@@ -72,13 +75,13 @@ def run(script: str, ad_type: str = config.AD_TYPE) -> AssetBundle | None:
                 mode = "CALIBRATION (not enforced)" if bundle.qa.calibration else "PASS"
                 print(f"\n✅ {mode} — shipped: {shipped}")
                 if bundle.qa.failures:
-                    print(f"   (would-be QA failures: {bundle.qa.failures})")
+                    print(f"   would-be QA failures: {bundle.qa.failures}")
                 return bundle
 
             last_reason = "; ".join(bundle.qa.failures) or "QA failed"
             print(f"❌ QA failed: {last_reason}")
 
-        except Exception as e:  # any stage error -> retry
+        except Exception as e:
             last_reason = f"{type(e).__name__}: {e}"
             print(f"❌ error: {last_reason}")
             traceback.print_exc()
@@ -88,9 +91,9 @@ def run(script: str, ad_type: str = config.AD_TYPE) -> AssetBundle | None:
     return None
 
 
-def _ad_id(script: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", script.lower()).strip("-")[:24] or "ad"
-    return f"{slug}-{time.strftime('%Y%m%d-%H%M%S')}"
+def _ad_id(job_dir: str, ad_type: str) -> str:
+    base = re.sub(r"[^a-z0-9]+", "-", os.path.basename(os.path.normpath(job_dir)).lower()).strip("-") or "ad"
+    return f"{ad_type}-{base}-{time.strftime('%Y%m%d-%H%M%S')}"
 
 
 def _ship(bundle: AssetBundle) -> str:
@@ -114,13 +117,9 @@ def _dead_letter(bundle: AssetBundle, reason: str) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--script", help="Path to a .txt ad script.")
-    g.add_argument("--text", help="Inline ad script text.")
+    ap.add_argument("--job", required=True, help="Path to a job folder (job.json + screenplay + storyboard/).")
     args = ap.parse_args()
-
-    script = open(args.script).read() if args.script else args.text
-    run(script)
+    run(args.job)
 
 
 if __name__ == "__main__":

@@ -1,41 +1,47 @@
 # Vertical Ad Pipeline
 
-Automated pipeline: refined ad script + ad-type → finished vertical (9:16) video ad.
+Input: a **screenplay (with timing) + a storyboard (one approved frame per beat) + an ad-type**.
+Output: a finished **9:16 vertical video ad**. The storyboard frames ARE the look —
+we animate from them, we don't invent visuals.
 
-**V1 scope:** one hardcoded ad-type (`cartoon_edit`, 3D/Pixar style, fresh characters
-per script), no dispatcher, no queue. ~10 ads/day. Add a dispatcher at ad-type #2;
-add a queue past ~50–100/day.
+## Three ad-types (the dispatcher routes by `ad_type`)
+| `ad_type` | What it is | Lip-sync? | Flow | Model (fal) |
+|---|---|---|---|---|
+| `ai_human` | real person to camera | ✅ | audio-first | OmniHuman v1.5 |
+| `fruit_object` | talking object/fruit | ✅ | audio-first | Kling AI-Avatar v2 |
+| `pixar_animation` | 3D animated scene | ❌ | visual-first | Kling 2.6 Pro I2V |
 
-## Flow (all six components built)
+Everything routes through **fal.ai** (one key, one bill, swap a model by editing one
+string in `ad_types.py`). Voice = **ElevenLabs**, brains/QA = **Claude**, stitching =
+**Shotstack**, cheap QA = **ffmpeg + Whisper** (local).
+
+## The flow (ordering depends on the type)
 ```
-script ──► script_director ──► generate ──► voiceover ──► assembly ──► QA gate ──► ship
-           (Claude:beats)      (fal:clips)  (11Labs:VO)   (Shotstack)  (1▸2▸3)      │
-                                                                                     ├─ pass  → output/shipped/
-                                                                                     ├─ fail  → retry gen ×2
-                                                                                     └─ still → logs/dead_letter/
+job folder ──► ingest ──► dispatcher picks recipe ──► …
+                (parse screenplay,
+                 pair each beat
+                 to its frame)
+
+  ai_human / fruit_object (lip-sync) — AUDIO FIRST:
+     voiceover per-beat ─► generate(frame + audio) ─► assemble ─► QA ─► ship
+     (each beat's frame is driven by its own line; clips carry their voice)
+
+  pixar_animation — VISUAL FIRST:
+     generate(frame + motion) ─► voiceover (narration) ─► assemble ─► QA ─► ship
 ```
-Everything reads/writes one **AssetBundle** (`schema.py`) — the contract:
-`{ clips, audio, captions, timing, overlay_metadata, qa }`.
+QA pass → `output/shipped/` · fail → retry generation ×2 · still failing → `logs/dead_letter/`.
 
-## Why this generation design
-"Cartoon edit" lives or dies on **art-style + character consistency across clips**,
-so generation is **keyframe image → image-to-video**: lock the character/style as an
-image, then animate it. Format here is 3D/Pixar with **fresh characters per script**,
-so consistency only needs to hold *within* one ad — `generate.py` makes the hero
-keyframe once (beat 0) and reuses it as a reference for later beats.
-
-## Vendor choices (all swappable)
-| Stage | Default | Cost | Swap |
-|---|---|---|---|
-| Direction | Claude (tool-use) | — | model id in `config.DIRECTOR_MODEL` |
-| Keyframe image | Seedream V4 (fal) | $0.03/img | Nano Banana, FLUX Kontext |
-| Image→video | Kling 2.5 Turbo Pro (fal) | $0.07/s | PixVerse, Vidu |
-| Voiceover | ElevenLabs | cheap | voice id in `config` |
-| Assembly | Shotstack | render-based | Creatomate (behind `assembly.py`) |
-| QA transcription | faster-whisper (local) | free | hosted Whisper API |
-| QA vision | Claude vision | per-call | — |
-
-≈ **under $2 per finished ad** at these defaults.
+## Input contract (a "job folder")
+```
+my_job/
+├── job.json                 # {"ad_type": "ai_human" | "fruit_object" | "pixar_animation"}
+├── screenplay.txt           # .txt / .fountain / .md  (with timing)
+└── storyboard/
+    ├── beat_01.png          # approved frame for beat 1
+    ├── beat_02.png          # …sorted filename order == beat order
+    └── ...
+```
+See [examples/sample_job](examples/sample_job) (drop real frames into its `storyboard/`).
 
 ## Setup
 ```bash
@@ -43,39 +49,32 @@ cd ~/ad-pipeline && source .venv/bin/activate
 pip install -r requirements.txt
 brew install ffmpeg                 # QA Layer 1 + frame sampling
 pip install faster-whisper          # QA Layer 2
-cp .env.example .env                # fill in all 4 keys
+cp .env.example .env                # FAL + ANTHROPIC + ELEVENLABS + SHOTSTACK keys
 ```
 
-## Run end-to-end
+## Run
 ```bash
-python pipeline.py --script examples/sample_script.txt
-# or
-python pipeline.py --text "Tired of tangled cables? ..."
+python pipeline.py --job examples/sample_job
 ```
-
-## Test a single component in isolation (recommended first runs)
-```bash
-python smoke_test.py --prompt "a 3D Pixar-style avocado waving hello"   # just fal generation
-```
-
-## Auto-QA calibration (important)
-`config.QA_CALIBRATION = True` for week 1: QA runs all 3 layers and **logs every
-score to `logs/qa_scores.jsonl` but never rejects**. After a week, read the logs,
-set real thresholds in `config.py`, and flip `QA_CALIBRATION = False` to enforce.
 
 ## Files
-- `config.py` — ad-type, model/vendor ids, QA thresholds, paths (the control panel)
-- `schema.py` — the AssetBundle contract (pydantic)
-- `script_director.py` — script → storyboard beats (Claude tool-use)
-- `video_gen.py` / `generate.py` — fal primitives / beats → clips
-- `voiceover.py` — ElevenLabs TTS → VO + word captions
+- `ad_types.py` — **the dispatcher + 3 recipes** (models, lip-sync flag, QA rubric). Add a type here.
+- `schema.py` — the AssetBundle contract (storyboard frame + per-beat audio + outputs)
+- `ingest.py` — job folder → beats paired with storyboard frames (Claude parses, doesn't invent)
+- `video_gen.py` — fal primitives: `upload_file`, `lipsync_from_image`, `image_to_video`
+- `generate.py` — beats → clips, routed by recipe (lip-sync vs motion)
+- `voiceover.py` — `synthesize_per_beat` (lip-sync) / `synthesize` (continuous narration)
 - `assembly.py` — bundle → Shotstack render → MP4
-- `qa/` — `layer1_technical` (ffprobe), `layer2_transcript` (whisper), `layer3_vision` (Claude), `gate`
-- `pipeline.py` — end-to-end glue + retry + dead-letter
-- `smoke_test.py` — Step-1 single-clip tester
+- `qa/` — `layer1_technical` (ffprobe), `layer2_transcript` (whisper), `layer3_vision` (Claude, per-type rubric), `gate`
+- `pipeline.py` — end-to-end glue, per-type ordering, retry + dead-letter
 
-## Known first-run fix points (untested against live APIs yet)
-1. **fal video output shape** — `video_gen._first_media_url` probes common shapes; confirm against the saved `*-raw.json`.
-2. **ElevenLabs timestamp fields** — `voiceover._get` handles `audio_base64`/`audio_base_64`; confirm against your SDK version.
-3. **Shotstack Ingest** — `assembly._ingest_upload` follows the documented flow; the upload/source step is the likeliest tweak.
-4. **Model IDs** — verify on each vendor's live catalog; code fails loudly with a hint if stale.
+## Known first-run fix points (untested against live APIs)
+1. **Screenplay parsing** — `ingest._parse_beats` assumes beat order == storyboard order; calibrate to your real screenplay format (PDF/.fdx extractors are a TODO).
+2. **fal model arg names** — `video_gen.lipsync_from_image` uses `image_url`+`audio_url`; confirm per model on fal.ai/models.
+3. **ElevenLabs timestamp fields** — `voiceover._get` handles the common variants.
+4. **Shotstack ingest** — `assembly._ingest_upload` upload/source step.
+5. **fruit_object lip-sync** — A/B OmniHuman vs Kling-Avatar on a real frame; it's the least-certain model choice.
+
+## QA calibration
+`config.QA_CALIBRATION = True` (week 1): all 3 layers run, scores log to
+`logs/qa_scores.jsonl`, nothing is rejected. Set thresholds from the logs, then flip to `False`.

@@ -20,15 +20,27 @@ from pydantic import BaseModel, Field
 
 class Clip(BaseModel):
     index: int
-    vo_line: str = ""                      # the narration spoken over this clip
-    keyframe_prompt: str
-    motion_prompt: str
-    duration: float
-    keyframe_url: Optional[str] = None     # fal-hosted image URL
-    video_url: Optional[str] = None        # fal-hosted video URL (fed to assembly)
-    local_path: Optional[str] = None       # downloaded copy for QA
-    keyframe_model: Optional[str] = None
+    vo_line: str = ""                          # dialogue/narration for this beat
+    motion_prompt: str = ""                    # action for this beat (from screenplay)
+    duration: float = 0.0                      # set by screenplay timing, or by audio length (lip-sync)
+
+    # storyboard-driven inputs (the approved frame IS the look):
+    storyboard_image_path: Optional[str] = None   # local approved frame
+    start_frame_url: Optional[str] = None          # uploaded frame URL (fal input)
+
+    # per-beat voiceover (lip-sync types drive each frame with its own line):
+    audio_path: Optional[str] = None
+    audio_url: Optional[str] = None
+
+    # outputs:
+    video_url: Optional[str] = None            # fal-hosted clip (fed to assembly)
+    local_path: Optional[str] = None           # downloaded copy for QA
     animator_model: Optional[str] = None
+
+    # legacy text-prompt flow (unused in storyboard mode):
+    keyframe_prompt: Optional[str] = None
+    keyframe_url: Optional[str] = None
+    keyframe_model: Optional[str] = None
 
 
 class Caption(BaseModel):

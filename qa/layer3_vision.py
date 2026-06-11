@@ -1,7 +1,8 @@
 """
 QA Layer 3 (priciest): sample keyframes from the rendered MP4 and score them with
-Claude vision against a cartoon_edit rubric — on-brand 3D/Pixar look, coherent,
-not garbled, and character-consistent across the sampled frames.
+Claude vision against THIS ad-type's rubric (pulled from its recipe) — so an
+ai_human ad is graded on lip-sync + face realism, a fruit_object on object mouth
+sync, a pixar on 3D polish.
 
 Needs ffmpeg (frame sampling) + ANTHROPIC_API_KEY.
 """
@@ -14,13 +15,10 @@ import subprocess
 import tempfile
 
 import config
+from ad_types import get_recipe
 
-_RUBRIC = (
-    "You are grading a frame sample from a 3D/Pixar-style cartoon video ad. "
-    "Score 0-10 on: (1) on-brand polished 3D look, (2) visual coherence / no "
-    "garbled or melted artifacts, (3) the SAME hero character across frames "
-    "(consistency). Return JSON only: "
-    '{"score": <0-10>, "character_consistent": <bool>, "garbled": <bool>, "notes": "<short>"}'
+_JSON_INSTRUCTION = (
+    ' Return JSON only: {"score": <0-10>, "garbled": <bool>, "notes": "<short>"}'
 )
 
 
@@ -34,10 +32,10 @@ def run(bundle, mp4_path: str) -> tuple[list[str], dict]:
     if not frames:
         return (["could not sample frames"], {"error": "no_frames"})
 
-    result = _score(frames, bundle.character_bible)
+    rubric = get_recipe(bundle.ad_type).vision_rubric
+    result = _score(frames, rubric)
     score = float(result.get("score", 0))
     scores = {"vision_score": score,
-              "character_consistent": result.get("character_consistent"),
               "garbled": result.get("garbled"),
               "vision_notes": result.get("notes", "")}
     failures = []
@@ -51,11 +49,10 @@ def run(bundle, mp4_path: str) -> tuple[list[str], dict]:
 def _sample_frames(path: str, n: int) -> list[bytes]:
     frames = []
     with tempfile.TemporaryDirectory() as d:
-        # Sample n evenly spaced frames via a select filter.
         out = os.path.join(d, "f_%02d.jpg")
         subprocess.run(
             ["ffmpeg", "-hide_banner", "-i", path,
-             "-vf", f"thumbnail,fps=1/2", "-frames:v", str(n), out],
+             "-vf", "thumbnail,fps=1/2", "-frames:v", str(n), out],
             capture_output=True, text=True,
         )
         for fn in sorted(os.listdir(d)):
@@ -64,14 +61,12 @@ def _sample_frames(path: str, n: int) -> list[bytes]:
     return frames[:n]
 
 
-def _score(frames: list[bytes], character_bible: str) -> dict:
+def _score(frames: list[bytes], rubric: str) -> dict:
     import json
     from anthropic import Anthropic
 
     client = Anthropic()
-    content = [{"type": "text",
-                "text": _RUBRIC + (f"\n\nIntended hero character: {character_bible}"
-                                   if character_bible else "")}]
+    content = [{"type": "text", "text": rubric + _JSON_INSTRUCTION}]
     for fb in frames:
         content.append({
             "type": "image",

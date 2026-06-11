@@ -1,12 +1,17 @@
 """
-Generation module: storyboard beats -> generated + downloaded clips.
+Generation (Stage 2): storyboard frames -> animated clips, routed by recipe.
 
-Within-ad consistency strategy (matches "fresh characters per script"):
-  - Beat 0 generates the HERO keyframe.
-  - Beats 1..N pass that hero keyframe as a reference image so the same 3D
-    character recurs across the ad's clips. No cross-ad character DB needed.
+  lip-sync types (needs_lipsync=True):
+      upload frame + that beat's audio -> OmniHuman / Kling-Avatar
+      (image + audio -> talking clip). The clip carries its own voice.
+      ==> voiceover MUST have run first (clip.audio_path set).
 
-Returns a list[Clip] with both fal URLs and local downloaded paths.
+  pixar (needs_lipsync=False):
+      upload frame -> image-to-video with the beat's motion_prompt.
+      The clip is silent; narration is added later in assembly.
+
+Each clip's approved storyboard frame is the literal start frame ("match closely").
+Downloads every clip locally for QA. Mutates + returns the clips.
 """
 from __future__ import annotations
 
@@ -14,42 +19,41 @@ import os
 
 import config
 import video_gen
-from schema import Clip
+from ad_types import AdTypeRecipe
 
 
-def generate_clips(storyboard: dict, ad_id: str) -> list[Clip]:
-    beats = storyboard["beats"]
+def generate_clips(clips, recipe: AdTypeRecipe, ad_id: str):
     work = os.path.join(config.WORK_DIR, ad_id)
     os.makedirs(work, exist_ok=True)
 
-    hero_ref: str | None = None
-    clips: list[Clip] = []
+    for clip in clips:
+        print(f"\n[gen] beat {clip.index + 1}/{len(clips)}  ({recipe.name})")
 
-    for i, beat in enumerate(beats):
-        print(f"\n[gen] beat {i + 1}/{len(beats)}")
-        kf_prompt = beat["keyframe_prompt"]
-        keyframe_url, _kf_raw = video_gen.generate_keyframe(
-            kf_prompt, reference_image_url=hero_ref
+        # The approved storyboard frame is the visual anchor -> upload for fal.
+        clip.start_frame_url = video_gen.upload_file(clip.storyboard_image_path)
+
+        if recipe.needs_lipsync:
+            if not clip.audio_path:
+                raise RuntimeError(
+                    f"beat {clip.index}: lip-sync type needs per-beat audio — "
+                    f"run voiceover.synthesize_per_beat() before generation."
+                )
+            clip.audio_url = video_gen.upload_file(clip.audio_path)
+            video_url, _ = video_gen.lipsync_from_image(
+                recipe.animator_model, clip.start_frame_url, clip.audio_url,
+            )
+        else:
+            video_url, _ = video_gen.image_to_video(
+                clip.start_frame_url, clip.motion_prompt,
+                duration=int(clip.duration or config.DEFAULT_CLIP_SECONDS),
+                model_id=recipe.animator_model,
+            )
+
+        clip.video_url = video_url
+        clip.local_path = video_gen.download(
+            video_url, os.path.join(work, f"clip_{clip.index:02d}.mp4")
         )
-        if i == 0:
-            hero_ref = keyframe_url  # lock the character for the rest of the ad
-
-        dur = int(beat.get("est_seconds", config.DEFAULT_CLIP_SECONDS))
-        video_url, _v_raw = video_gen.image_to_video(keyframe_url, beat["motion_prompt"], dur)
-
-        local_path = video_gen.download(video_url, os.path.join(work, f"clip_{i:02d}.mp4"))
-
-        clips.append(Clip(
-            index=i,
-            vo_line=beat.get("vo_line", ""),
-            keyframe_prompt=kf_prompt,
-            motion_prompt=beat["motion_prompt"],
-            duration=float(dur),
-            keyframe_url=keyframe_url,
-            video_url=video_url,
-            local_path=local_path,
-            keyframe_model=config.KEYFRAME_MODEL,
-            animator_model=config.ANIMATOR_MODEL,
-        ))
+        clip.animator_model = recipe.animator_model
+        print(f"[gen] clip -> {clip.local_path}")
 
     return clips
