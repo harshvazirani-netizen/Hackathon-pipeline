@@ -58,23 +58,34 @@ def main():
     # Always deliver the FINAL version: a motion beat with a VO line gets its
     # voice merged over the clip via Shotstack (sandbox = free). Lip-sync beats
     # already carry their voice.
-    if (not clip.lipsync) and clip.audio_path:
-        print("[MERGE] laying VO over the clip (Shotstack, free) ...")
-        local = _merge(video_url, clip.audio_path, clip.duration,
-                       os.path.join(out, "final.mp4"))
+    if clip.overlay_text or ((not clip.lipsync) and clip.audio_path):
+        print("[MERGE] final (VO + caption) via Shotstack, free ...")
+        local = _merge(video_url, clip.audio_path if not clip.lipsync else None,
+                       clip.duration, os.path.join(out, "final.mp4"),
+                       caption=clip.overlay_text)
 
     print(f"\n✅ scene done: {local}\n   raw: {out}/raw.json")
 
 
-def _merge(video_url: str, audio_path: str, duration: float, dest: str) -> str:
+def _merge(video_url: str, audio_path: str | None, duration: float, dest: str,
+           caption: str = "") -> str:
     import assembly
     import requests
-    vo_url = assembly._ingest_upload(audio_path)
     length = round(duration or 10, 3)
-    edit = {"timeline": {"background": "#000000", "tracks": [
-        {"clips": [{"asset": {"type": "audio", "src": vo_url}, "start": 0, "length": length}]},
-        {"clips": [{"asset": {"type": "video", "src": video_url}, "start": 0, "length": length, "fit": "cover"}]},
-    ]}, "output": {"format": "mp4", "size": {"width": config.WIDTH, "height": config.HEIGHT}, "fps": 30}}
+    tracks = []
+    if caption:
+        tracks.append({"clips": [{
+            "asset": {"type": "title", "text": assembly._strip_emoji(caption),
+                      "style": "subtitle", "size": "medium", "position": "bottom"},
+            "start": 0, "length": length}]})
+    if audio_path:
+        vo_url = assembly._ingest_upload(audio_path)
+        tracks.append({"clips": [{"asset": {"type": "audio", "src": vo_url},
+                                  "start": 0, "length": length}]})
+    tracks.append({"clips": [{"asset": {"type": "video", "src": video_url},
+                              "start": 0, "length": length, "fit": "cover"}]})
+    edit = {"timeline": {"background": "#000000", "tracks": tracks},
+            "output": {"format": "mp4", "size": {"width": config.WIDTH, "height": config.HEIGHT}, "fps": 30}}
     r = requests.post(assembly._base("edit") + "/render", json=edit,
                       headers=assembly._headers(), timeout=60)
     r.raise_for_status()

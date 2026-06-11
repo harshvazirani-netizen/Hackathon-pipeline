@@ -58,9 +58,31 @@ def _run(model_id: str, arguments: dict) -> dict:
 
 
 def upload_file(local_path: str) -> str:
-    """Upload a local file (storyboard frame, VO clip) to fal; return a fetchable URL."""
+    """Upload a local file (storyboard frame, VO clip) to fal; return a fetchable URL.
+    Images smaller than the video models' 300x300 minimum are upscaled first."""
     _require_key()
+    local_path = _ensure_min_size(local_path)
     return fal_client.upload_file(local_path)
+
+
+def _ensure_min_size(path: str, min_side: int = 512) -> str:
+    """Kling/OmniHuman reject images under 300x300 (e.g. contact-sheet slices).
+    Upscale small images to a temp copy; non-images pass through untouched."""
+    if not path.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
+        return path
+    try:
+        from PIL import Image
+    except ImportError:
+        return path
+    im = Image.open(path)
+    if min(im.size) >= min_side:
+        return path
+    scale = min_side / min(im.size)
+    im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    out = path.rsplit(".", 1)[0] + ".upscaled.jpg"
+    im.convert("RGB").save(out, quality=92)
+    print(f"[gen] frame under {min_side}px -> upscaled to {im.size}")
+    return out
 
 
 def image_to_video(image_url: str, motion_prompt: str,
