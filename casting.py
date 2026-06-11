@@ -46,11 +46,16 @@ def cast(job_dir: str, clips, screenplay: str = "") -> dict:
                 voice_map[s] = cached[s]
                 todo.remove(s)
 
-    # 3. Claude casting from the usable pool
+    # 3. Claude casting from the usable pool (+ native-language library voices
+    #    when the lines are Hindi/Hinglish — needs a paid ElevenLabs plan)
     if todo:
+        lang = _detect_language(clips)
         pool = _usable_voices()
+        if lang == "hi":
+            pool = _library_voices("hi") + pool
         if pool and os.getenv("ANTHROPIC_API_KEY"):
-            picked = _claude_cast(todo, clips, screenplay, pool)
+            picked = _claude_cast(todo, clips, screenplay, pool, lang)
+            picked = {s: _materialise(v, pool) for s, v in picked.items()}
             voice_map.update(picked)
             todo = [s for s in todo if s not in picked]
         # 4. fallback
@@ -63,6 +68,69 @@ def cast(job_dir: str, clips, screenplay: str = "") -> dict:
     for s in speakers:
         print(f"[cast] {s} -> {voice_map[s]}")
     return voice_map
+
+
+_HINDI_HINTS = (" hai", " nahi", " kyun", " tum", " kitne", " ho.", " ho ", " main ",
+                " mein", " aur ", " kya ", " yeh", " woh", " pyaar", " swaad")
+
+
+def _detect_language(clips) -> str:
+    """'hi' for Hindi/Hinglish lines (Devanagari or romanized), else 'en'."""
+    import re
+    text = " ".join(c.vo_line for c in clips if c.vo_line)
+    if re.search(r"[ऀ-ॿ]", text):
+        return "hi"
+    low = f" {text.lower()} "
+    if sum(h in low for h in _HINDI_HINTS) >= 2:
+        return "hi"
+    return "en"
+
+
+def _library_voices(language: str) -> list[dict]:
+    """Native-language voices from the shared library (usable on paid plans).
+    Marked with public_owner_id so a pick can be added to My Voices first."""
+    key = os.getenv("ELEVENLABS_API_KEY")
+    if not key:
+        return []
+    r = requests.get(
+        f"https://api.elevenlabs.io/v1/shared-voices?page_size=20&language={language}",
+        headers={"xi-api-key": key}, timeout=30)
+    if r.status_code != 200:
+        print(f"[cast] library lookup failed ({r.status_code}); premades only")
+        return []
+    out = []
+    for v in r.json().get("voices", []):
+        if v.get("language") != language:  # API filter is loose; enforce strictly
+            continue
+        out.append({
+            "voice_id": v["voice_id"],
+            "name": v.get("name", ""),
+            "gender": v.get("gender", ""),
+            "age": v.get("age", ""),
+            "accent": v.get("accent", ""),
+            "style": (v.get("description") or "")[:80],
+            "use_case": v.get("use_case", ""),
+            "public_owner_id": v.get("public_owner_id"),
+        })
+    return out
+
+
+def _materialise(voice_id: str, pool: list[dict]) -> str:
+    """If the pick is a shared-library voice, add it to My Voices first (required
+    before TTS). Returns the usable voice_id (falls back to default on failure)."""
+    entry = next((v for v in pool if v["voice_id"] == voice_id), None)
+    if not entry or not entry.get("public_owner_id"):
+        return voice_id  # premade/own voice — usable as-is
+    key = os.getenv("ELEVENLABS_API_KEY")
+    r = requests.post(
+        f"https://api.elevenlabs.io/v1/voices/add/{entry['public_owner_id']}/{voice_id}",
+        headers={"xi-api-key": key}, json={"new_name": entry["name"]}, timeout=30)
+    if r.status_code == 200:
+        new_id = r.json().get("voice_id", voice_id)
+        print(f"[cast] added library voice '{entry['name']}' -> {new_id}")
+        return new_id
+    print(f"[cast] ⚠ couldn't add library voice ({r.status_code}: {r.text[:80]}); using default")
+    return config.ELEVENLABS_VOICE_ID
 
 
 def _manual_voices(job_dir: str) -> dict:
@@ -98,7 +166,8 @@ def _usable_voices() -> list[dict]:
     return out
 
 
-def _claude_cast(speakers: list[str], clips, screenplay: str, pool: list[dict]) -> dict:
+def _claude_cast(speakers: list[str], clips, screenplay: str, pool: list[dict],
+                 lang: str = "en") -> dict:
     from anthropic import Anthropic
 
     lines = {s: [c.vo_line for c in clips if (c.speaker or "VO") == s and c.vo_line][:3]
@@ -134,8 +203,11 @@ def _claude_cast(speakers: list[str], clips, screenplay: str, pool: list[dict]) 
         messages=[{"role": "user", "content": (
             "Cast a voice for each speaker in this vertical video ad. Match gender, age, "
             "tone and role implied by the screenplay and their lines. Use DIFFERENT voices "
-            "for different speakers.\n\n"
-            f"Speakers and sample lines:\n{json.dumps(lines, ensure_ascii=False, indent=1)}\n\n"
+            "for different speakers.\n"
+            + ("IMPORTANT: the lines are in HINDI/HINGLISH — strongly prefer native "
+               "Hindi/Indian-accent voices from the roster over US/UK ones.\n\n"
+               if lang == "hi" else "\n")
+            + f"Speakers and sample lines:\n{json.dumps(lines, ensure_ascii=False, indent=1)}\n\n"
             f"Screenplay excerpt:\n{screenplay[:800]}\n\nVoice roster:\n{roster}"
         )}],
     )
