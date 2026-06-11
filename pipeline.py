@@ -61,6 +61,10 @@ def run(job_dir: str) -> AssetBundle | None:
             print("[VO] per-beat ...")
             bundle.captions = voiceover.synthesize_per_beat(bundle.clips, work, voice_map)
 
+            print("[CAPTIONS] timing screenplay text to the voice ...")
+            import captions as captions_mod
+            bundle.overlay_captions = captions_mod.align_overlay(bundle.clips, bundle.captions)
+
             print("[GEN] per-beat (lip-sync vs motion) ...")
             generate.generate_clips(bundle.clips, recipe, ad_id)
 

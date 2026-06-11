@@ -92,7 +92,8 @@ class AssetBundle(BaseModel):
     character_bible: str = ""              # (legacy) hero character desc
     clips: list[Clip] = Field(default_factory=list)
     audio: AudioTrack = Field(default_factory=AudioTrack)
-    captions: list[Caption] = Field(default_factory=list)
+    captions: list[Caption] = Field(default_factory=list)          # per-word TTS captions
+    overlay_captions: list[Caption] = Field(default_factory=list)  # screenplay text, timed to the voice
     timing: Timing = Field(default_factory=Timing)
     overlay_metadata: OverlayMetadata = Field(default_factory=OverlayMetadata)
     rendered_path: Optional[str] = None    # final vertical MP4

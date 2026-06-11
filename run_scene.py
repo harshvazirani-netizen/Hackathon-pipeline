@@ -32,12 +32,19 @@ def main():
     out = os.path.join(config.WORK_DIR, f"scene-test-{os.path.basename(args.job)}-{args.beat:02d}")
     os.makedirs(out, exist_ok=True)
 
+    word_caps = []
     if clip.vo_line:
         sp = os.path.join(args.job, "screenplay.txt")
         screenplay = open(sp).read() if os.path.exists(sp) else ""
         vmap = casting.cast(args.job, clips, screenplay)
         print("[VO] ...")
-        voiceover.synthesize_per_beat([clip], out, vmap)
+        word_caps = voiceover.synthesize_per_beat([clip], out, vmap)
+
+    # time the screenplay text to the voice (scene-relative)
+    timed = []
+    if clip.overlay_text:
+        import captions as captions_mod
+        timed = captions_mod.align_overlay([clip], word_caps)
 
     print("[GEN] uploading frame ...")
     clip.start_frame_url = video_gen.upload_file(clip.storyboard_image_path)
@@ -58,26 +65,27 @@ def main():
     # Always deliver the FINAL version: a motion beat with a VO line gets its
     # voice merged over the clip via Shotstack (sandbox = free). Lip-sync beats
     # already carry their voice.
-    if clip.overlay_text or ((not clip.lipsync) and clip.audio_path):
-        print("[MERGE] final (VO + caption) via Shotstack, free ...")
+    if timed or clip.overlay_text or ((not clip.lipsync) and clip.audio_path):
+        print("[MERGE] final (VO + timed captions) via Shotstack, free ...")
         local = _merge(video_url, clip.audio_path if not clip.lipsync else None,
                        clip.duration, os.path.join(out, "final.mp4"),
+                       captions=timed or None,
                        caption=clip.overlay_text)
 
     print(f"\n✅ scene done: {local}\n   raw: {out}/raw.json")
 
 
 def _merge(video_url: str, audio_path: str | None, duration: float, dest: str,
-           caption: str = "") -> str:
+           captions: list | None = None, caption: str = "") -> str:
     import assembly
     import requests
     length = round(duration or 10, 3)
     tracks = []
-    if caption:
-        tracks.append({"clips": [{
-            "asset": {"type": "title", "text": assembly._strip_emoji(caption),
-                      "style": "subtitle", "size": "medium", "position": "bottom"},
-            "start": 0, "length": length}]})
+    if captions:  # timed segments (preferred)
+        tracks.append({"clips": [
+            assembly._title(c.text, c.start, c.end - c.start) for c in captions]})
+    elif caption:  # full-scene fallback
+        tracks.append({"clips": [assembly._title(caption, 0, length)]})
     if audio_path:
         vo_url = assembly._ingest_upload(audio_path)
         tracks.append({"clips": [{"asset": {"type": "audio", "src": vo_url},

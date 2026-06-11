@@ -75,40 +75,22 @@ def _build_edit(bundle) -> dict:
 
     tracks = []
 
-    # Captions track (on top).
-    # Preferred: the screenplay's per-beat 'text' (overlay_text) shown at the
-    # bottom for the whole beat. Fallback (no overlay_text anywhere): word
-    # captions chunked from the TTS timestamps.
+    # Captions track (on top). Priority:
+    #   1. overlay_captions — screenplay 'text' segments TIMED to the voice
+    #   2. overlay_text     — full text for the whole beat (fallback)
+    #   3. word captions chunked from TTS timestamps (no screenplay text at all)
     caption_clips = []
-    if any(c.overlay_text for c in bundle.clips):
+    if bundle.overlay_captions:
+        for cap in bundle.overlay_captions:
+            caption_clips.append(_title(cap.text, cap.start, cap.end - cap.start))
+    elif any(c.overlay_text for c in bundle.clips):
         for ct in bundle.timing.clips:
             clip = next(c for c in bundle.clips if c.index == ct.index)
-            if not clip.overlay_text:
-                continue
-            caption_clips.append({
-                "asset": {
-                    "type": "title",
-                    "text": _strip_emoji(clip.overlay_text),
-                    "style": "subtitle",
-                    "size": "medium",
-                    "position": "bottom",
-                },
-                "start": round(ct.start, 3),
-                "length": round(ct.end - ct.start, 3),
-            })
+            if clip.overlay_text:
+                caption_clips.append(_title(clip.overlay_text, ct.start, ct.end - ct.start))
     else:
         for line in _chunk_captions(bundle.captions):
-            caption_clips.append({
-                "asset": {
-                    "type": "title",
-                    "text": line["text"],
-                    "style": "subtitle",
-                    "size": "medium",
-                    "position": "bottom",
-                },
-                "start": round(line["start"], 3),
-                "length": round(line["end"] - line["start"], 3),
-            })
+            caption_clips.append(_title(line["text"], line["start"], line["end"] - line["start"]))
     if caption_clips:
         tracks.append({"clips": caption_clips})
 
@@ -159,6 +141,16 @@ def _build_edit(bundle) -> dict:
             "size": {"width": config.WIDTH, "height": config.HEIGHT},
             "fps": 30,
         },
+    }
+
+
+def _title(text: str, start: float, length: float) -> dict:
+    """Bottom caption clip. 'small' size so long lines don't clip the 9:16 frame."""
+    return {
+        "asset": {"type": "title", "text": _strip_emoji(text),
+                  "style": "subtitle", "size": "small", "position": "bottom"},
+        "start": round(start, 3),
+        "length": round(max(length, 0.5), 3),
     }
 
 
