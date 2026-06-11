@@ -26,6 +26,10 @@ def main():
     sp = os.path.join(args.job, "screenplay.txt")
     screenplay = open(sp).read() if os.path.exists(sp) else ""
 
+    print(f"\n[LOCALIZE] dialogue -> {config.VOICE_LANGUAGE} ...")
+    import localize as localize_mod
+    localize_mod.localize(clips)
+
     print("\n[CAST] locking per-character voices ...")
     vmap = casting.cast(args.job, clips, screenplay)
 

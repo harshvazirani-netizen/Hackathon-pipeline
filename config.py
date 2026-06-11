@@ -24,6 +24,7 @@ VISION_MODEL = "claude-opus-4-8"     # QA layer 3: score frames vs the recipe's 
 ELEVENLABS_VOICE_ID = "HI0kneBmwaZBJsViQ5rD"   # user's own voice (free-tier usable)
 ELEVENLABS_MODEL = "eleven_multilingual_v2"
 PREFER_INDIAN_VOICES = True   # brand default: cast native Indian/Hindi-accent voices for ALL characters
+VOICE_LANGUAGE = "hi"         # spoken language for VO; "hi" = translate every line to Hindi, "en" = as written
 
 # --- Assembly (Shotstack; Creatomate swappable behind assembly.py) -------------
 SHOTSTACK_ENV = os.getenv("SHOTSTACK_ENV", "stage")  # 'stage' = free sandbox, 'v1' = production

@@ -20,7 +20,8 @@ from pydantic import BaseModel, Field
 
 class Clip(BaseModel):
     index: int
-    vo_line: str = ""                          # dialogue/narration for this beat
+    vo_line: str = ""                          # dialogue/narration spoken in this beat (post-localization)
+    vo_original: str = ""                      # the source line before any translation
     speaker: str = ""                          # who says it (EXPERT/HOST/VO/character name) -> voice casting
     overlay_text: str = ""                     # screenplay 'text:' -> bottom caption for this beat's duration
     lipsync: bool = False                      # True = a character speaks ON camera this beat

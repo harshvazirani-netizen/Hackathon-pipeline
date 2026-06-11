@@ -42,6 +42,11 @@ def run(job_dir: str) -> AssetBundle | None:
                          vision_rubric=recipe.vision_rubric,
                          script=f"(job: {job_dir})", clips=clips)
 
+    # Localize spoken dialogue (default Hindi) before casting/VO.
+    print(f"[LOCALIZE] dialogue -> {config.VOICE_LANGUAGE} ...")
+    import localize as localize_mod
+    localize_mod.localize(bundle.clips)
+
     # Voice casting: each screenplay speaker gets their own ElevenLabs voice
     # (manual job.json override > cached voices.json > Claude picks from the pool).
     print("[CAST] voices per speaker ...")
