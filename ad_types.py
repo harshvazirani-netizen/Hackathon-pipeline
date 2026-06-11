@@ -70,3 +70,34 @@ def get_recipe(ad_type: str) -> AdTypeRecipe:
     if ad_type not in RECIPES:
         raise ValueError(f"unknown ad_type '{ad_type}'. known: {list(RECIPES)}")
     return RECIPES[ad_type]
+
+
+def generic_recipe(needs_lipsync: bool, label: str = "other") -> AdTypeRecipe:
+    """Build a recipe for a storyboard that ISN'T one of the named presets.
+
+    We never reject an unknown type — the only thing that truly changes the flow
+    is whether a character speaks on camera (lip-sync) or not, so we route on that
+    and pick a GENERAL model that handles arbitrary subjects/styles.
+    """
+    if needs_lipsync:
+        return AdTypeRecipe(
+            name=label or "other",
+            needs_lipsync=True,
+            animator_model="fal-ai/kling-video/ai-avatar/v2/pro",   # animates "any character" + audio
+            director_focus="A character speaking dialogue to camera.",
+            vision_rubric=(
+                "Grading frames of a talking-character ad. Score 0-10: believable "
+                "moving mouth synced to the words, subject stays on-model (no melt/"
+                "morph), matches the storyboard frame. Flag garbled/artifacted."
+            ),
+        )
+    return AdTypeRecipe(
+        name=label or "other",
+        needs_lipsync=False,
+        animator_model="fal-ai/kling-video/v2.6/pro/image-to-video",  # any-style motion
+        director_focus="Describe the camera and subject motion in the scene.",
+        vision_rubric=(
+            "Grading frames of a video ad. Score 0-10: coherent motion (no garble/"
+            "melting) and match to the storyboard frame. Flag artifacts."
+        ),
+    )

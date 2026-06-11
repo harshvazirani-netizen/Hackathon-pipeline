@@ -15,7 +15,6 @@ import subprocess
 import tempfile
 
 import config
-from ad_types import get_recipe
 
 _JSON_INSTRUCTION = (
     ' Return JSON only: {"score": <0-10>, "garbled": <bool>, "notes": "<short>"}'
@@ -32,7 +31,9 @@ def run(bundle, mp4_path: str) -> tuple[list[str], dict]:
     if not frames:
         return (["could not sample frames"], {"error": "no_frames"})
 
-    rubric = get_recipe(bundle.ad_type).vision_rubric
+    rubric = bundle.vision_rubric or (
+        "Score the frames 0-10 for coherence and match to the intended look. "
+        "Flag garbled/artifacted.")
     result = _score(frames, rubric)
     score = float(result.get("score", 0))
     scores = {"vision_score": score,

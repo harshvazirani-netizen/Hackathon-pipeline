@@ -1,17 +1,23 @@
 # Vertical Ad Pipeline
 
-Input: a **screenplay (with timing) + a storyboard (one approved frame per beat) + an ad-type**.
+Input: a **screenplay (with timing) + a storyboard (one approved frame per beat)**.
 Output: a finished **9:16 vertical video ad**. The storyboard frames ARE the look —
 we animate from them, we don't invent visuals.
 
-## Three ad-types (the dispatcher routes by `ad_type`)
+## Ad-types — read FROM the storyboard
+The type is **auto-detected from the first storyboard frame** (Claude vision). An
+explicit `job.json` `ad_type` is only an optional override.
+
 | `ad_type` | What it is | Lip-sync? | Flow | Model (fal) |
 |---|---|---|---|---|
 | `ai_human` | real person to camera | ✅ | audio-first | OmniHuman v1.5 |
 | `fruit_object` | talking object/fruit | ✅ | audio-first | Kling AI-Avatar v2 |
 | `pixar_animation` | 3D animated scene | ❌ | visual-first | Kling 2.6 Pro I2V |
+| **anything else** | any other storyboard | auto | by lip-sync | **generic recipe** (Kling AI-Avatar if it talks, else Kling I2V) |
 
-Everything routes through **fal.ai** (one key, one bill, swap a model by editing one
+The 3 are optimized presets; a storyboard outside them is **never rejected** — it
+gets a generic recipe routed by the one thing that matters (does a character speak
+on camera?). Everything routes through **fal.ai** (one key, one bill, swap a model by editing one
 string in `ad_types.py`). Voice = **ElevenLabs**, brains/QA = **Claude**, stitching =
 **Shotstack**, cheap QA = **ffmpeg + Whisper** (local).
 
@@ -34,7 +40,7 @@ QA pass → `output/shipped/` · fail → retry generation ×2 · still failing 
 ## Input contract (a "job folder")
 ```
 my_job/
-├── job.json                 # {"ad_type": "ai_human" | "fruit_object" | "pixar_animation"}
+├── job.json                 # OPTIONAL — type is read from the storyboard; this only overrides it
 ├── screenplay.txt           # .txt / .fountain / .md  (with timing)
 └── storyboard/
     ├── beat_01.png          # approved frame for beat 1

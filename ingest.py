@@ -7,15 +7,17 @@ into per-beat {dialogue, action, timing}, aligned 1:1 with the storyboard images
 
 Expected job folder:
   job/
-  ├── job.json            # {"ad_type": "ai_human" | "fruit_object" | "pixar_animation"}
+  ├── job.json            # {"ad_type": "ai_human"|"fruit_object"|"pixar_animation"}
+  │                       #   or {"ad_type":"auto"} / omit it -> detect from the storyboard
   ├── screenplay.txt      # .txt / .fountain / .md  (PDF/.fdx extractors = TODO)
   └── storyboard/
       ├── beat_01.png     # frame for beat 1  (sorted order == beat order)
       ├── beat_02.png
       └── ...
 
-Returns: (ad_type, [Clip, ...]) with each Clip's storyboard_image_path + vo_line +
-motion_prompt + duration filled. Generation/voiceover fill the rest.
+Returns: (recipe, [Clip, ...]) — recipe is a named preset OR a generic recipe built
+on the fly for storyboards outside the 3 presets. Each Clip has
+storyboard_image_path + vo_line + motion_prompt + duration filled.
 """
 from __future__ import annotations
 
@@ -23,20 +25,21 @@ import glob
 import json
 import os
 
-from ad_types import get_recipe
+from ad_types import RECIPES, AdTypeRecipe, get_recipe, generic_recipe
 from schema import Clip
 
 _IMG_EXT = (".png", ".jpg", ".jpeg", ".webp")
 
 
-def ingest(job_dir: str) -> tuple[str, list[Clip]]:
-    ad_type = _read_ad_type(job_dir)
-    recipe = get_recipe(ad_type)
-
+def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
     screenplay = _read_screenplay(job_dir)
     frames = _list_frames(job_dir)
     if not frames:
         raise SystemExit(f"No storyboard images found in {job_dir}/storyboard/")
+
+    # The storyboard decides the type (explicit job.json is only an optional
+    # override). Anything outside the 3 presets gets a generic recipe.
+    recipe = _resolve_recipe(job_dir, frames[0], screenplay)
 
     beats = _parse_beats(screenplay, len(frames), recipe.director_focus)
 
@@ -56,16 +59,95 @@ def ingest(job_dir: str) -> tuple[str, list[Clip]]:
             storyboard_image_path=frames[i],
             animator_model=recipe.animator_model,
         ))
-    print(f"[ingest] {ad_type}: {len(clips)} beats paired with storyboard frames")
-    return ad_type, clips
+    print(f"[ingest] {recipe.name} (lip-sync={recipe.needs_lipsync}): "
+          f"{len(clips)} beats paired with storyboard frames")
+    return recipe, clips
 
 
-def _read_ad_type(job_dir: str) -> str:
+def _resolve_recipe(job_dir: str, first_frame: str, screenplay: str) -> AdTypeRecipe:
+    """Decide the recipe by LOOKING AT the storyboard. Order:
+      1. explicit job.json ad_type naming a known preset -> use it (override).
+      2. else classify from the first frame:
+           - matches a known preset -> that recipe
+           - anything else ('other') -> generic recipe routed by needs_lipsync.
+    We never reject a storyboard for being outside the 3 presets.
+    """
     p = os.path.join(job_dir, "job.json")
-    if not os.path.exists(p):
-        raise SystemExit(f"Missing {p} (must contain {{'ad_type': ...}}).")
-    with open(p) as f:
-        return json.load(f)["ad_type"]
+    if os.path.exists(p):
+        with open(p) as f:
+            declared = json.load(f).get("ad_type")
+        if declared and declared != "auto" and declared in RECIPES:
+            print(f"[ingest] ad_type (explicit override): {declared}")
+            return get_recipe(declared)
+
+    c = _classify(first_frame, screenplay)
+    if c["ad_type"] in RECIPES:
+        print(f"[ingest] ad_type (from storyboard): {c['ad_type']}")
+        return get_recipe(c["ad_type"])
+
+    label = (c.get("subject") or "other").strip().lower().replace(" ", "_")[:24]
+    print(f"[ingest] outside the presets -> generic recipe '{label}' "
+          f"(lip-sync={c['needs_lipsync']}): {c.get('reason', '')}")
+    return generic_recipe(bool(c["needs_lipsync"]), label)
+
+
+def _classify(frame_path: str, screenplay: str) -> dict:
+    """Look at the first storyboard frame (+ screenplay excerpt) and report what it
+    is. Returns one of the 3 presets OR 'other', PLUS needs_lipsync — the one
+    property that changes the flow for an unknown type."""
+    import base64
+    from anthropic import Anthropic
+
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        raise SystemExit("ANTHROPIC_API_KEY not set (needed to read the type from the storyboard).")
+
+    with open(frame_path, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode()
+    media = "image/png" if frame_path.lower().endswith(".png") else "image/jpeg"
+
+    tool = {
+        "name": "describe_ad",
+        "description": "Report the ad type and whether a character speaks on camera.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "ad_type": {"type": "string", "enum": list(RECIPES) + ["other"],
+                            "description": "A named preset, or 'other' if none of them."},
+                "needs_lipsync": {"type": "boolean",
+                                  "description": "True if a character speaks ON camera (visible mouth moving)."},
+                "subject": {"type": "string", "description": "Short label, e.g. 'talking dog', 'claymation toy'."},
+                "confidence": {"type": "number", "description": "0..1"},
+                "reason": {"type": "string"},
+            },
+            "required": ["ad_type", "needs_lipsync", "subject", "confidence", "reason"],
+        },
+    }
+    client = Anthropic()
+    resp = client.messages.create(
+        model=__import__("config").DIRECTOR_MODEL,
+        max_tokens=400,
+        tools=[tool],
+        tool_choice={"type": "tool", "name": "describe_ad"},
+        messages=[{"role": "user", "content": [
+            {"type": "text", "text": (
+                "Look at this ad's first storyboard frame + screenplay excerpt and describe it.\n"
+                "Known presets:\n"
+                "- ai_human: a realistic human person on camera\n"
+                "- fruit_object: an anthropomorphized object/fruit character\n"
+                "- pixar_animation: a 3D / Pixar-style animated scene\n"
+                "If it is none of these, use 'other' and still set needs_lipsync "
+                "(does a character speak on camera?).\n\n"
+                f"Screenplay excerpt:\n{screenplay[:600]}")},
+            {"type": "image", "source": {"type": "base64", "media_type": media, "data": img_b64}},
+        ]}],
+    )
+    for block in resp.content:
+        if getattr(block, "type", None) == "tool_use" and block.name == "describe_ad":
+            data = block.input
+            if data.get("confidence", 0) < 0.6:
+                print(f"[ingest] ⚠ low-confidence read ({data.get('confidence')}): {data.get('reason')}")
+            return data
+    raise RuntimeError("Classify: Claude did not return a description.")
 
 
 def _read_screenplay(job_dir: str) -> str:

@@ -30,19 +30,20 @@ import ingest as ingest_mod
 import generate
 import voiceover
 import assembly
-from ad_types import get_recipe
 from qa import gate
 from schema import AssetBundle, AudioTrack
 
 
 def run(job_dir: str) -> AssetBundle | None:
-    ad_type, clips = ingest_mod.ingest(job_dir)
-    recipe = get_recipe(ad_type)
+    recipe, clips = ingest_mod.ingest(job_dir)
+    ad_type = recipe.name
     ad_id = _ad_id(job_dir, ad_type)
     work = os.path.join(config.WORK_DIR, ad_id)
     print(f"\n{'=' * 60}\nAD {ad_id}  ({ad_type}, lip-sync={recipe.needs_lipsync})\n{'=' * 60}")
 
     bundle = AssetBundle(ad_id=ad_id, ad_type=ad_type,
+                         needs_lipsync=recipe.needs_lipsync,
+                         vision_rubric=recipe.vision_rubric,
                          script=f"(job: {job_dir})", clips=clips)
 
     last_reason = "unknown"

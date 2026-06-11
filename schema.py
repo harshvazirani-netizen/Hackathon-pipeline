@@ -83,9 +83,11 @@ class QAResult(BaseModel):
 
 class AssetBundle(BaseModel):
     ad_id: str
-    ad_type: str
-    script: str
-    character_bible: str = ""              # the hero character desc, reused across clips
+    ad_type: str                           # recipe name (preset or auto-detected label)
+    needs_lipsync: bool = False            # set from the recipe; drives flow + assembly
+    vision_rubric: str = ""                # set from the recipe; used by QA layer 3
+    script: str = ""
+    character_bible: str = ""              # (legacy) hero character desc
     clips: list[Clip] = Field(default_factory=list)
     audio: AudioTrack = Field(default_factory=AudioTrack)
     captions: list[Caption] = Field(default_factory=list)
