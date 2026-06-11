@@ -88,7 +88,7 @@ def _build_edit(bundle) -> dict:
             caption_clips.append({
                 "asset": {
                     "type": "title",
-                    "text": clip.overlay_text,
+                    "text": _strip_emoji(clip.overlay_text),
                     "style": "subtitle",
                     "size": "medium",
                     "position": "bottom",
@@ -160,6 +160,13 @@ def _build_edit(bundle) -> dict:
             "fps": 30,
         },
     }
+
+
+def _strip_emoji(s: str) -> str:
+    """Insurance: upstream says no more emojis, but strip any stragglers so
+    Shotstack titles never render tofu boxes."""
+    import re
+    return re.sub(r"[\U0001F000-\U0001FAFF☀-➿️]", "", s).strip()
 
 
 def _chunk_captions(captions, max_words: int = 4, max_dur: float = 2.0) -> list[dict]:
