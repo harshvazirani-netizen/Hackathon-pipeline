@@ -40,7 +40,7 @@
     "vo_line": "When something goes up this fast, at some point the momentum STOPS. And when it stops... it falls.",
     "motion_prompt": "Expert close-up leaning forward, conversational urgent energy, direct eye contact.",
     "on_camera_speech": true,
-    "storyboard_image_path": "storyboard/frame_5.jpg",
+    "storyboard_image_path": "storyboard/frame_4.jpg",
     "overlay_text": "The scary part nobody's talking about ⚠️"
   },
   {
@@ -51,7 +51,7 @@
     "vo_line": "Everyone's asking: should I buy gold right now? I want to — but what if it drops 20 percent tomorrow?",
     "motion_prompt": "Stacked two-shot: host reacting visibly, nodding with concern, expert pausing below; subtle camera drift.",
     "on_camera_speech": false,
-    "storyboard_image_path": "storyboard/frame_4.jpg",
+    "storyboard_image_path": "storyboard/frame_5.jpg",
     "overlay_text": "Should you buy gold RIGHT NOW? 🤔"
   },
   {
@@ -62,7 +62,7 @@
     "vo_line": "A 20 percent correction? That's absolutely a possibility.",
     "motion_prompt": "Expert looks directly into camera, calm but serious delivery, minimal movement.",
     "on_camera_speech": true,
-    "storyboard_image_path": "storyboard/frame_5.jpg",
+    "storyboard_image_path": "storyboard/frame_6.jpg",
     "overlay_text": "His honest answer 👇 (save this)"
   },
   {
@@ -73,7 +73,7 @@
     "vo_line": "Follow for our full breakdown on what to actually do with gold right now.",
     "motion_prompt": "Glossy gold bars stacked, soft dreamy blur transition, slow rotation glint, end-card mood.",
     "on_camera_speech": false,
-    "storyboard_image_path": "storyboard/frame_8.jpg",
+    "storyboard_image_path": "storyboard/frame_7.jpg",
     "overlay_text": "Full breakdown in bio 🔗 | Save this before it moves again"
   }
 ]
