@@ -88,8 +88,10 @@ def _claude_align(rows) -> list[Caption]:
             "semantically-related words are SPOKEN (the words may be in Hindi "
             "while the text is English — match by meaning). Rules: times stay "
             "inside the scene's window; segments in order, non-overlapping; "
-            "each visible at least 1s; the scene's last segment stays until the "
-            "window ends.\n\n"
+            "each visible at least 1s. A segment ENDS ~0.4s after its related "
+            "words finish being spoken — do NOT stretch any segment (including "
+            "the last one) to the scene end; once the dialogue it relates to is "
+            "over, the text leaves the screen.\n\n"
             f"Scenes:\n{json.dumps(rows, ensure_ascii=False, indent=1)}"
         )}],
     )
