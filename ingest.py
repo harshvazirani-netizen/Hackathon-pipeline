@@ -112,7 +112,10 @@ def _classify(frame_path: str, screenplay: str) -> dict:
             "type": "object",
             "properties": {
                 "ad_type": {"type": "string", "enum": list(RECIPES) + ["other"],
-                            "description": "A named preset, or 'other' if none of them."},
+                            "description": "Strongly PREFER a named preset (ai_human / "
+                                           "fruit_object / pixar_animation) — pick the closest "
+                                           "even if imperfect. Use 'other' ONLY if it clearly "
+                                           "fits none of the three."},
                 "needs_lipsync": {"type": "boolean",
                                   "description": "True if a character speaks ON camera (visible mouth moving)."},
                 "subject": {"type": "string", "description": "Short label, e.g. 'talking dog', 'claymation toy'."},
@@ -130,13 +133,15 @@ def _classify(frame_path: str, screenplay: str) -> dict:
         tool_choice={"type": "tool", "name": "describe_ad"},
         messages=[{"role": "user", "content": [
             {"type": "text", "text": (
-                "Look at this ad's first storyboard frame + screenplay excerpt and describe it.\n"
-                "Known presets:\n"
+                "Look at this ad's first storyboard frame + screenplay excerpt and classify it.\n"
+                "FIRST try to match one of these three presets — pick the closest one even if "
+                "it isn't perfect:\n"
                 "- ai_human: a realistic human person on camera\n"
                 "- fruit_object: an anthropomorphized object/fruit character\n"
                 "- pixar_animation: a 3D / Pixar-style animated scene\n"
-                "If it is none of these, use 'other' and still set needs_lipsync "
-                "(does a character speak on camera?).\n\n"
+                "Only choose 'other' if the storyboard genuinely fits NONE of the three. "
+                "Always set needs_lipsync (does a character speak on camera with a visible "
+                "moving mouth?).\n\n"
                 f"Screenplay excerpt:\n{screenplay[:600]}")},
             {"type": "image", "source": {"type": "base64", "media_type": media, "data": img_b64}},
         ]}],
