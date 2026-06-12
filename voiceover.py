@@ -30,7 +30,8 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
     timeline slot and is never overwritten. If a spoken line runs longer than
     its slot, the VO is sped up to fit — ElevenLabs speed (its 1.2x cap) then
     ffmpeg atempo up to a combined config.MAX_VO_SPEED (1.5x), both pitch-preserved.
-    Only if it STILL overruns do we stretch the scene (and warn to trim the line).
+    The screenplay slot is FIXED (never stretched); if a line still can't fit at
+    max speed we warn so it gets trimmed (it would otherwise be cut at the boundary).
     Returns captions with absolute timeline positions."""
     os.makedirs(work_dir, exist_ok=True)
     voice_map = voice_map or {}
@@ -47,11 +48,18 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
         else:
             beat_caps, path = _multi_segment(segs, clip, work_dir, voice_map)
         clip.audio_path = path
-        # Never chop dialogue: if the (already speed-fit) VO still overruns the
-        # slot, stretch the scene to fit it. Lip-sync especially must play fully.
+        # The screenplay scene time is AUTHORITATIVE: the clip is generated/trimmed
+        # to this slot and the VO was already sped up (<=1.5x) to fit it. We do NOT
+        # stretch the scene to the voice. Only when a scene has NO slot do we fall
+        # back to the spoken length. If a line still can't fit at max speed, warn so
+        # it gets trimmed — it would otherwise be cut at the scene boundary.
         spoken = beat_caps[-1].end if beat_caps else 0.0
-        if spoken and (not clip.duration or spoken > clip.duration):
+        if not clip.duration:
             clip.duration = round(spoken + 0.15, 2)
+        elif spoken > clip.duration + 0.25:
+            print(f"[VO] ⚠ beat {clip.index}: line is {spoken:.1f}s but the slot is "
+                  f"{clip.duration:.0f}s even at {config.MAX_VO_SPEED}x — TRIM ~"
+                  f"{spoken - clip.duration:.1f}s of words, or it gets cut at the cut.")
 
         for c in beat_caps:
             captions.append(Caption(text=c.text, start=c.start + offset, end=c.end + offset))
