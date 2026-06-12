@@ -45,8 +45,12 @@ def _low_motion(beat: dict) -> bool:
 
 
 def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
-    # Fast path: a pre-built beats.json (e.g. from html_adapter) is authoritative
-    # -> skip the Claude parse/classify entirely.
+    # Raw timestamped source: scene windows + flat vo + flat text -> bucket by time.
+    source = os.path.join(job_dir, "source.json")
+    if os.path.exists(source):
+        return _ingest_from_source(job_dir, source)
+
+    # Pre-built beats.json (e.g. from html_adapter or bucket) -> use directly.
     manifest = os.path.join(job_dir, "beats.json")
     if os.path.exists(manifest):
         return _ingest_from_manifest(job_dir, manifest)
@@ -82,6 +86,32 @@ def ingest(job_dir: str) -> tuple[AdTypeRecipe, list[Clip]]:
             storyboard_image_path=frames[i],
         ))
     _normalize_segments(clips)
+    _summarise(recipe, clips)
+    return recipe, clips
+
+
+def _ingest_from_source(job_dir: str, source: str) -> tuple[AdTypeRecipe, list[Clip]]:
+    """Bucket raw timestamped {scenes, vo, text} into per-scene clips."""
+    import bucket
+    with open(source, encoding="utf-8") as f:
+        data = json.load(f)
+    beats = bucket.bucket_beats(data["scenes"], data.get("vo", []), data.get("text", []))
+    recipe = _recipe_from_jobjson(job_dir)
+    clips = []
+    for i, b in enumerate(beats):
+        frame = b.get("frame", i + 1)
+        clips.append(Clip(
+            index=i,
+            vo_segments=b["vo_segments"],
+            text_cues=b["text_cues"],
+            lipsync=bool(b.get("on_camera_speech", False)),
+            low_motion=_low_motion(b),
+            motion_prompt=b.get("motion_prompt", ""),
+            duration=b["duration"],
+            storyboard_image_path=_resolve_frame(job_dir, f"storyboard/frame_{frame}.jpg"),
+        ))
+    _normalize_segments(clips)
+    print(f"[ingest] source.json bucketed by time -> {len(clips)} scenes")
     _summarise(recipe, clips)
     return recipe, clips
 
