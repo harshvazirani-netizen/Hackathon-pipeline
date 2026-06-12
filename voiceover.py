@@ -46,8 +46,11 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
         else:
             beat_caps, path = _multi_segment(segs, clip, work_dir, voice_map)
         clip.audio_path = path
-        if not clip.duration and beat_caps:
-            clip.duration = beat_caps[-1].end  # no slot given -> audio defines it
+        # Never chop dialogue: if the (already speed-fit) VO still overruns the
+        # slot, stretch the scene to fit it. Lip-sync especially must play fully.
+        spoken = beat_caps[-1].end if beat_caps else 0.0
+        if spoken and (not clip.duration or spoken > clip.duration):
+            clip.duration = round(spoken + 0.15, 2)
 
         for c in beat_caps:
             captions.append(Caption(text=c.text, start=c.start + offset, end=c.end + offset))

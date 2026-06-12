@@ -48,7 +48,7 @@ def generate_clips(clips, recipe: AdTypeRecipe, ad_id: str):
             clip.animator_model = recipe.motion_model
             video_url, _ = video_gen.image_to_video(
                 clip.start_frame_url, clip.motion_prompt,
-                duration=int(clip.duration or config.DEFAULT_CLIP_SECONDS),
+                duration=clip.duration or config.DEFAULT_CLIP_SECONDS,
                 model_id=recipe.motion_model,
                 low_motion=clip.low_motion,
                 negatives=clip.negatives,

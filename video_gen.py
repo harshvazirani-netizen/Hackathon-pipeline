@@ -112,7 +112,7 @@ def image_to_video(image_url: str, motion_prompt: str,
     args = {
         "start_image_url": image_url,
         "prompt": prompt,
-        "duration": "10" if int(duration) > 5 else "5",
+        "duration": "10" if float(duration) > 5 else "5",   # block must cover the scene
         "generate_audio": False,
     }
     negs = []
