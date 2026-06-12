@@ -62,18 +62,30 @@ def render(bundle, out_path: str) -> str:
 def _build_edit(bundle) -> dict:
     bundle.compute_timing()
 
-    # Video track: clips end to end, with a short cross-dissolve between scenes
-    # so the cuts aren't abrupt (first clip fades in from black; rest dissolve).
+    # Video track: clips laid end to end. Scenes hard-cut into each other — NO
+    # fade between scenes (Shotstack "fade" fades through black, which produced a
+    # black flash at every cut). Continuity instead comes from end-frame chaining
+    # at generation time (each motion scene ends on the NEXT scene's first frame,
+    # so the cut continues seamlessly). Only the very first/last edges fade from/to
+    # black, so the ad opens and closes cleanly.
+    n_clips = len(bundle.timing.clips)
     video_clips = []
     for n, ct in enumerate(bundle.timing.clips):
         clip = next(c for c in bundle.clips if c.index == ct.index)
-        video_clips.append({
+        vc = {
             "asset": {"type": "video", "src": clip.video_url},
             "start": round(ct.start, 3),
             "length": round(ct.end - ct.start, 3),
             "fit": "cover",
-            "transition": {"in": "fade", "out": "fade"},
-        })
+        }
+        trans = {}
+        if n == 0:
+            trans["in"] = "fade"            # open from black
+        if n == n_clips - 1:
+            trans["out"] = "fade"           # close to black
+        if trans:
+            vc["transition"] = trans
+        video_clips.append(vc)
 
     tracks = []
 

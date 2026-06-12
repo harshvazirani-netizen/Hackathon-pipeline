@@ -99,15 +99,20 @@ def image_to_video(image_url: str, motion_prompt: str,
                    duration: int = config.DEFAULT_CLIP_SECONDS,
                    model_id: str | None = None,
                    low_motion: bool = False,
-                   negatives: str = "") -> tuple[str, dict]:
+                   negatives: str = "",
+                   end_image_url: str | None = None) -> tuple[str, dict]:
     """Visual-first animation (pixar): animate a still into a clip. model_id is the
-    recipe's animator and is required."""
+    recipe's animator and is required.
+
+    end_image_url (optional) is the clip's FINAL frame — set it to the next scene's
+    storyboard frame so the scene animates toward it and the cut into the next scene
+    is seamless ("continue from there"), not a jump or a black flash."""
     if not model_id:
         raise ValueError("image_to_video requires model_id (from the recipe).")
     # Kling 2.6 I2V schema (verified on fal): start_image_url + prompt (required),
-    # duration enum "5"/"10" only, NO aspect_ratio, generate_audio default true.
-    # Motion clips are silent here (SFX/VO added in assembly), so audio is off; the
-    # clip is trimmed to the beat's timeline length during assembly.
+    # duration enum "5"/"10" only, NO aspect_ratio, generate_audio default true,
+    # optional end_image_url (final-frame target). Motion clips are silent here
+    # (SFX/VO added in assembly); the clip is trimmed to the beat length in assembly.
     prompt = motion_prompt or "subtle, natural motion; keep the framing steady"
     args = {
         "start_image_url": image_url,
@@ -115,6 +120,8 @@ def image_to_video(image_url: str, motion_prompt: str,
         "duration": "10" if float(duration) > 5 else "5",   # block must cover the scene
         "generate_audio": False,
     }
+    if end_image_url:
+        args["end_image_url"] = end_image_url
     negs = []
     if negatives:                       # per-scene NEGATIVES from the screenplay
         negs.append(negatives)
