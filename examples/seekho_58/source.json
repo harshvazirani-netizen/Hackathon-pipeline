@@ -1,0 +1,139 @@
+{
+  "scenes": [
+    {
+      "start": 0, "end": 4, "frame": 1, "on_camera_speech": false,
+      "shot": {
+        "start": "Scrap yard, daylight; a weathered male hand rests on a large dusty tractor tyre, dust hanging in the sunlight",
+        "action": "the hand pats the tyre once then grips its edge; a dust puff rises",
+        "end": "hand gripping the tyre edge, dust settling",
+        "camera": "locked-off close-up"
+      },
+      "negatives": "no people entering, no camera cut, no zoom, no text",
+      "ambient": "one soft tyre thud"
+    },
+    {
+      "start": 4, "end": 9, "frame": 2, "on_camera_speech": false,
+      "shot": {
+        "start": "RAJU standing alone in the scrap yard, one foot on the tyre, facing camera",
+        "action": "a slow chin raise into a faint half-smile",
+        "end": "eyes locked on camera, smile held",
+        "camera": "slow push-in, knees-up to chest-up"
+      },
+      "negatives": "no one else enters, no camera cut, no text",
+      "ambient": "faint yard wind"
+    },
+    {
+      "start": 9, "end": 16, "frame": 3, "on_camera_speech": false,
+      "shot": {
+        "start": "hands with a hammer at the mesh-fitted tyre rim; a finished trough behind with a buffalo drinking",
+        "action": "three steady hammer taps seating the mesh; the buffalo keeps drinking in the background",
+        "end": "hammer resting on the rim, buffalo still at the water",
+        "camera": "locked-off, a tiny drift right toward the buffalo in the last second"
+      },
+      "negatives": "no faces, no camera cut, the buffalo does not leave, no text",
+      "ambient": "hammer taps only"
+    },
+    {
+      "start": 16, "end": 23, "frame": 4, "on_camera_speech": false,
+      "shot": {
+        "start": "RAJU crouched by a row of finished naands on the village street, an older man static in the background",
+        "action": "one wiping stroke along the trough rim, then he looks up to camera",
+        "end": "gaze locked on camera, hand resting on the rim",
+        "camera": "static"
+      },
+      "negatives": "background man stays put, no camera cut, no vehicles, no text",
+      "ambient": "low street murmur"
+    },
+    {
+      "start": 23, "end": 31, "frame": 5, "on_camera_speech": false,
+      "shot": {
+        "start": "night room, RAJU on a cot, face lit by phone glow, scrolling",
+        "action": "the scrolling quickens, then he stops and lowers the phone to his lap, exhaling",
+        "end": "phone on his lap, jaw tight, motionless in the glow",
+        "camera": "slow push-in, waist-up"
+      },
+      "negatives": "no lights turn on, no one enters, no screen content visible, no camera cut, no text",
+      "ambient": "quiet room tone, a single cricket"
+    },
+    {
+      "start": 31, "end": 39, "frame": 6, "on_camera_speech": false,
+      "shot": {
+        "start": "outdoor daylight, a hand holding a blank-white-screen phone filling the frame, people seated far behind in soft focus",
+        "action": "the thumb taps the blank screen once, then hovers",
+        "end": "thumb resting at the screen edge, phone steady",
+        "camera": "locked-off insert"
+      },
+      "negatives": "background people stay still, no interface or text on the screen, no camera cut",
+      "ambient": "one soft tap",
+      "low_motion": true
+    },
+    {
+      "start": 39, "end": 45, "frame": 7, "on_camera_speech": false,
+      "shot": {
+        "start": "the farmer pressing currency notes into RAJU's palm over the trough, cattle behind the fence",
+        "action": "the notes pass; RAJU's fist closes around them",
+        "end": "both men still, the trough between them, fist closed",
+        "camera": "static medium two-shot"
+      },
+      "negatives": "no extra people, no camera cut, calm faces, no text",
+      "ambient": "one cattle low"
+    },
+    {
+      "start": 45, "end": 53, "frame": 8, "on_camera_speech": false,
+      "shot": {
+        "start": "market street; RAJU at the stacked naands with two buyers; his mother in a green saree at the doorway touching her earrings",
+        "action": "RAJU straightens, chin lifting toward camera; the mother touches her earring in the background",
+        "end": "proud stance frozen, buyers mid-conversation, mother smiling in the doorway",
+        "camera": "slow push-in"
+      },
+      "negatives": "no crowd surge, no camera cut, the mother stays in the doorway, no text",
+      "ambient": "low market murmur"
+    },
+    {
+      "start": 53, "end": 58, "frame": 9, "on_camera_speech": true,
+      "shot": {
+        "start": "RAJU chest-up, arms crossed, market behind him, a slight smile at camera",
+        "action": "one slow nod",
+        "end": "still, smiling at camera",
+        "camera": "locked-off"
+      },
+      "negatives": "no one approaches camera, no camera cut, no text",
+      "ambient": "market murmur fading"
+    }
+  ],
+  "vo": [
+    { "start": 0,  "end": 4,  "speaker": "RAJU",   "line": "ये फेंका हुआ टायर दिख रहा है? इसी में महीने के 60,000 छुपे हैं।" },
+    { "start": 4,  "end": 9,  "speaker": "RAJU",   "line": "लोग मुझे कबाड़ी बुलाते थे, कहते थे कचरा बेचके ज़िंदगी नहीं चलती... पर मैं चुप रहा।" },
+    { "start": 9,  "end": 16, "speaker": "RAJU",   "line": "एक पुराना टायर सिर्फ़ 120 रुपये का आता है, और थोड़ी मेहनत के बाद वही नांद बनकर 600 से 1,000 में बिकता है।" },
+    { "start": 16, "end": 23, "speaker": "RAJU",   "line": "दिन के पाँच बनाओ तो महीने के डेढ़ सौ हो जाते हैं — और ज़रूरत हर गाँव, हर बाड़े में है। हिसाब ख़ुद जोड़ लो।" },
+    { "start": 23, "end": 31, "speaker": "RAJU",   "line": "सोचा काम बढ़ाऊँ, पर समझ नहीं आया कैसे। यूट्यूब खोला... और वहीं ग़लती हो गयी — ना प्रोसेस समझ आया, ना मंडी का रास्ता।" },
+    { "start": 31, "end": 39, "speaker": "RAJU",   "line": "फिर सीखो ऐप मिला। बिज़नेस आइडियाज़ कैटेगरी में A टू Z सिखाया — माल कहाँ से लेना, बनाना कैसे, बेचना कहाँ। कोई बड़ी बातें नहीं, शुरुआत सिर्फ़ 1 रुपये के ट्रायल से।" },
+    { "start": 39, "end": 41, "speaker": "FARMER", "line": "ले भाई, बढ़िया बना है।" },
+    { "start": 41, "end": 45, "speaker": "RAJU",   "line": "वो मेरी पहली कमाई थी — पूरे 600 रुपये, अपने ख़ुद के काम के।" },
+    { "start": 45, "end": 53, "speaker": "RAJU",   "line": "आज मंडी में मेरी अपनी जगह है और महीने के 70 हज़ार बनते हैं। माँ के लिए पहली बार गहने लिए... और अब लोग कबाड़ी नहीं, कारीगर बोलते हैं।" },
+    { "start": 53, "end": 58, "speaker": "RAJU",   "line": "ज़िंदगी भर नौकरी थोड़ी करनी है... तो इंस्टॉल बटन पर क्लिक करो और सीखो ऐप डाउनलोड करो।" }
+  ],
+  "text": [
+    { "start": 0,  "end": 2,  "text": "Ye phenka hua tyre dikh raha hai?" },
+    { "start": 2,  "end": 4,  "text": "Isi mein mahine ke ₹60,000 chhupe hain" },
+    { "start": 4,  "end": 7,  "text": "Log mujhe kabaadi bulate the..." },
+    { "start": 7,  "end": 9,  "text": "par main chup raha" },
+    { "start": 9,  "end": 12, "text": "Ek purana tyre sirf ₹120 ka aata hai" },
+    { "start": 12, "end": 16, "text": "thodi mehnat ke baad wahi naand ₹600-1,000 mein bikta hai" },
+    { "start": 16, "end": 19, "text": "Din ke 5 banao, mahine ke 150" },
+    { "start": 19, "end": 21, "text": "zaroorat har gaon, har baade mein hai" },
+    { "start": 21, "end": 23, "text": "Hisaab khud jod lo" },
+    { "start": 23, "end": 26, "text": "Socha kaam badhaun... par kaise?" },
+    { "start": 26, "end": 28, "text": "YouTube khola — wahin galti ho gayi" },
+    { "start": 28, "end": 31, "text": "na process samajh aaya, na mandi ka raasta" },
+    { "start": 31, "end": 33, "text": "Phir Seekho app mila" },
+    { "start": 33, "end": 36, "text": "Business Ideas category mein A to Z sikhaya" },
+    { "start": 36, "end": 39, "text": "koi badi baatein nahi — sirf ₹1 ka trial" },
+    { "start": 39, "end": 41, "text": "\"Le bhai, badhiya bana hai\"" },
+    { "start": 41, "end": 45, "text": "Meri pehli kamai — ₹600, apne khud ke kaam ke" },
+    { "start": 45, "end": 48, "text": "Aaj mandi mein apni jagah — ₹70,000 / mahina" },
+    { "start": 48, "end": 50, "text": "Maa ke liye pehli baar gehne liye" },
+    { "start": 50, "end": 53, "text": "ab log kabaadi nahi... KAARIGAR bolte hain" },
+    { "start": 53, "end": 58, "text": "Install button par click karo, Seekho app download karo" }
+  ]
+}
