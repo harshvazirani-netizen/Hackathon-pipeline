@@ -1,4 +1,5 @@
 {
   "ad_type": "ai_human",
-  "add_captions": false
+  "add_captions": true,
+  "burned_caption_frames": [1]
 }
