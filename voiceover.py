@@ -28,8 +28,9 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
 
     The screenplay's scene time is AUTHORITATIVE: clip.duration is the fixed
     timeline slot and is never overwritten. If a spoken line runs longer than
-    its slot, the VO is regenerated faster (ElevenLabs speed, capped 1.2x);
-    if it still doesn't fit, we warn (QA layer 1 also checks duration).
+    its slot, the VO is sped up to fit — ElevenLabs speed (its 1.2x cap) then
+    ffmpeg atempo up to a combined config.MAX_VO_SPEED (1.5x), both pitch-preserved.
+    Only if it STILL overruns do we stretch the scene (and warn to trim the line).
     Returns captions with absolute timeline positions."""
     os.makedirs(work_dir, exist_ok=True)
     voice_map = voice_map or {}
@@ -59,22 +60,38 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
 
 
 def _one_segment(seg, clip, work_dir, voice_map):
-    """Single speaker: TTS once, pace to the scene slot if it overruns."""
+    """Single speaker: TTS once, pace to the scene slot if it overruns.
+
+    Two-stage fit, both pitch-preserved: (1) ElevenLabs speed, capped at its 1.2x
+    API limit; (2) if still long, ffmpeg atempo time-compresses up to a COMBINED
+    config.MAX_VO_SPEED (1.5x). Only past that do we stretch the scene."""
     voice = voice_map.get(seg.speaker or "VO")
     audio_b64, alignment = _tts(seg.line, voice_id=voice)
     caps = _captions_from_alignment(alignment)
     spoken = caps[-1].end if caps else 0.0
     target = clip.duration
+    el_speed = 1.0
     if target and spoken > target + 0.15:
-        speed = min(1.2, spoken / target)
-        print(f"[VO] beat {clip.index}: {spoken:.1f}s > {target:.0f}s slot -> retry at {speed:.2f}x")
-        audio_b64, alignment = _tts(seg.line, voice_id=voice, speed=speed)
+        el_speed = min(1.2, spoken / target)
+        print(f"[VO] beat {clip.index}: {spoken:.1f}s > {target:.0f}s slot -> ElevenLabs {el_speed:.2f}x")
+        audio_b64, alignment = _tts(seg.line, voice_id=voice, speed=el_speed)
         caps = _captions_from_alignment(alignment)
-        if caps and caps[-1].end > target + 0.3:
-            print(f"[VO] ⚠ beat {clip.index} still {caps[-1].end:.1f}s in a {target:.0f}s slot")
+        spoken = caps[-1].end if caps else 0.0
     path = os.path.join(work_dir, f"vo_{clip.index:02d}.mp3")
     with open(path, "wb") as f:
         f.write(base64.b64decode(audio_b64))
+    # Still over after ElevenLabs' 1.2x cap? Time-compress with ffmpeg atempo up to
+    # the combined MAX_VO_SPEED before falling back to stretching the scene.
+    if target and spoken > target + 0.15:
+        room = config.MAX_VO_SPEED / el_speed          # extra speed still allowed
+        factor = min(room, spoken / target)
+        if factor > 1.01:
+            caps = _atempo(path, factor, caps)
+            spoken = caps[-1].end if caps else spoken
+            print(f"[VO] beat {clip.index}: atempo {factor:.2f}x -> {spoken:.1f}s "
+                  f"(combined {el_speed * factor:.2f}x, cap {config.MAX_VO_SPEED}x)")
+    if target and spoken > target + 0.3:
+        print(f"[VO] ⚠ beat {clip.index} still {spoken:.1f}s in a {target:.0f}s slot — trim the line")
     return caps, path
 
 
@@ -95,9 +112,40 @@ def _multi_segment(segs, clip, work_dir, voice_map):
         t += (seg_caps[-1].end if seg_caps else 0.0)
         print(f"[VO] beat {clip.index} seg {j} ({seg.speaker}): {seg.line[:40]!r}")
     merged = _concat_audio(seg_paths, os.path.join(work_dir, f"vo_{clip.index:02d}.mp3"))
+    if clip.duration and t > clip.duration + 0.15:
+        factor = min(config.MAX_VO_SPEED, t / clip.duration)
+        if factor > 1.01:
+            caps = _atempo(merged, factor, caps)
+            t = caps[-1].end if caps else t
+            print(f"[VO] beat {clip.index} multi: atempo {factor:.2f}x -> {t:.1f}s")
     if clip.duration and t > clip.duration + 0.3:
         print(f"[VO] ⚠ beat {clip.index} multi-speaker VO {t:.1f}s > {clip.duration:.0f}s slot")
     return caps, merged
+
+
+def _atempo(path: str, factor: float, caps: list[Caption]) -> list[Caption]:
+    """Time-compress an mp3 by `factor` IN PLACE (pitch-preserved, ffmpeg atempo)
+    and scale the word-caption timings to match. atempo handles 0.5–2.0 in one
+    pass (our factor is <=1.5). Fails soft: on any error keep the original."""
+    import shutil
+    import subprocess
+    if not shutil.which("ffmpeg"):
+        print("[VO] ffmpeg not found — skipping atempo (scene will stretch instead)")
+        return caps
+    tmp = path + ".tmp.mp3"
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "quiet", "-i", path,
+             "-filter:a", f"atempo={factor:.3f}", tmp],
+            check=True,
+        )
+        os.replace(tmp, path)
+    except Exception as e:                               # noqa: BLE001
+        print(f"[VO] atempo failed ({e}); keeping original speed")
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return caps
+    return [Caption(text=c.text, start=c.start / factor, end=c.end / factor) for c in caps]
 
 
 def _concat_audio(paths: list[str], dest: str) -> str:

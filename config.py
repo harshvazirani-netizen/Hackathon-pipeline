@@ -23,6 +23,7 @@ VISION_MODEL = "claude-opus-4-8"     # QA layer 3: score frames vs the recipe's 
 # --- ElevenLabs (TTS) ----------------------------------------------------------
 ELEVENLABS_VOICE_ID = "HI0kneBmwaZBJsViQ5rD"   # user's own voice (free-tier usable)
 ELEVENLABS_MODEL = "eleven_multilingual_v2"
+MAX_VO_SPEED = 1.5   # max time-compression to fit a line in its slot (ffmpeg atempo, pitch-preserved)
 PREFER_INDIAN_VOICES = True   # brand default: cast native Indian/Hindi-accent voices for ALL characters
 VOICE_LANGUAGE = "hi"         # spoken language for VO; "hi" = translate every line to Hindi, "en" = as written
 
@@ -53,6 +54,12 @@ QA_LOG = os.path.join(LOGS_DIR, "qa_scores.jsonl")
 
 for _d in (OUTPUT_DIR, WORK_DIR, SHIPPED_DIR, LOGS_DIR, DEAD_LETTER_DIR):
     os.makedirs(_d, exist_ok=True)
+
+# Make the bundled static ffmpeg/ffprobe (bin/) discoverable to subprocess +
+# shutil.which everywhere — no Homebrew needed. Unblocks VO time-stretch + QA.
+_BIN = os.path.join(PROJECT_DIR, "bin")
+if os.path.isdir(_BIN) and _BIN not in os.environ.get("PATH", "").split(os.pathsep):
+    os.environ["PATH"] = _BIN + os.pathsep + os.environ.get("PATH", "")
 
 # Load .env from the project dir (cwd-independent) so EVERY entrypoint that
 # imports config has the API keys available, regardless of import order.
