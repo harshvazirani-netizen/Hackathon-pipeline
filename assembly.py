@@ -66,8 +66,8 @@ def _build_edit(bundle) -> dict:
     # fade between scenes (Shotstack "fade" fades through black, which produced a
     # black flash at every cut). Continuity instead comes from end-frame chaining
     # at generation time (each motion scene ends on the NEXT scene's first frame,
-    # so the cut continues seamlessly). Only the very first/last edges fade from/to
-    # black, so the ad opens and closes cleanly.
+    # so the cut continues seamlessly). The ad OPENS directly on scene 1's
+    # storyboard frame (no fade-from-black); only the very last clip fades out.
     n_clips = len(bundle.timing.clips)
     video_clips = []
     for n, ct in enumerate(bundle.timing.clips):
@@ -78,13 +78,8 @@ def _build_edit(bundle) -> dict:
             "length": round(ct.end - ct.start, 3),
             "fit": "cover",
         }
-        trans = {}
-        if n == 0:
-            trans["in"] = "fade"            # open from black
         if n == n_clips - 1:
-            trans["out"] = "fade"           # close to black
-        if trans:
-            vc["transition"] = trans
+            vc["transition"] = {"out": "fade"}   # close to black; open has no fade
         video_clips.append(vc)
 
     tracks = []
