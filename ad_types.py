@@ -27,6 +27,7 @@ class AdTypeRecipe:
     motion_model: str            # silent beats
     director_focus: str
     vision_rubric: str
+    keyframe_model: str = "fal-ai/bytedance/seedream/v4/text-to-image"  # script -> on-script keyframe
 
 
 RECIPES = {

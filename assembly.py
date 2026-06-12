@@ -62,15 +62,17 @@ def render(bundle, out_path: str) -> str:
 def _build_edit(bundle) -> dict:
     bundle.compute_timing()
 
-    # Video track: clips end to end.
+    # Video track: clips end to end, with a short cross-dissolve between scenes
+    # so the cuts aren't abrupt (first clip fades in from black; rest dissolve).
     video_clips = []
-    for ct in bundle.timing.clips:
+    for n, ct in enumerate(bundle.timing.clips):
         clip = next(c for c in bundle.clips if c.index == ct.index)
         video_clips.append({
             "asset": {"type": "video", "src": clip.video_url},
             "start": round(ct.start, 3),
             "length": round(ct.end - ct.start, 3),
             "fit": "cover",
+            "transition": {"in": "fade", "out": "fade"},
         })
 
     tracks = []

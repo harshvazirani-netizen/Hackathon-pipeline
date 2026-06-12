@@ -54,8 +54,15 @@ def main():
         cues = [{"text": c.text, "start": c.start, "length": c.end - c.start, "position": "bottom"}
                 for c in captions_mod.align_overlay([clip], word_caps)]
 
-    print("[GEN] uploading frame ...")
-    clip.start_frame_url = video_gen.upload_file(clip.storyboard_image_path)
+    if _job_flag(args.job, "generate_keyframes", False):
+        import keyframe as kf_mod
+        cb = _job_flag(args.job, "character_bible", "")
+        print("[GEN] keyframe from script ...")
+        clip.start_frame_url, _ = kf_mod.keyframe_for(clip, recipe, cb)
+        print(f"[GEN] keyframe: {clip.start_frame_url[:64]}")
+    else:
+        print("[GEN] uploading storyboard frame ...")
+        clip.start_frame_url = video_gen.upload_file(clip.storyboard_image_path)
     if clip.lipsync:
         clip.audio_url = video_gen.upload_file(clip.audio_path)
         video_url, raw = video_gen.lipsync_from_image(

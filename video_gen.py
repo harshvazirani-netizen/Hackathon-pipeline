@@ -65,6 +65,16 @@ def upload_file(local_path: str) -> str:
     return fal_client.upload_file(local_path)
 
 
+def generate_image(prompt: str, model_id: str, ref_url: str | None = None) -> tuple[str, dict]:
+    """Text -> a 9:16 keyframe image (fal image model). Optional reference image for
+    character/style consistency. Verify arg names per model on fal.ai/models."""
+    args: dict = {"prompt": prompt, "image_size": {"width": 1080, "height": 1920}}
+    if ref_url:
+        args["image_urls"] = [ref_url]   # reference-conditioned models (Seedream/FLUX/Nano-Banana)
+    result = _run(model_id, args)
+    return _first_media_url(result, kind="image"), result
+
+
 def _ensure_min_size(path: str, min_side: int = 512) -> str:
     """Kling/OmniHuman reject images under 300x300 (e.g. contact-sheet slices).
     Upscale small images to a temp copy; non-images pass through untouched."""
