@@ -1,0 +1,103 @@
+{
+  "scenes": [
+    {"start": 0, "end": 3, "frame": 1, "on_camera_speech": false,
+     "shot": {"start": "Scrap yard, daylight; a large dusty tractor tyre lies flat; a weathered male hand enters frame",
+              "action": "the hand tips the tyre upright; dust puffs once",
+              "end": "tyre standing upright, hand resting on top, holding still",
+              "camera": "locked-off close-up"},
+     "negatives": "no other people, no camera cut, no text, no zoom",
+     "ambient": "faint yard wind, one soft tyre thud"},
+
+    {"start": 3, "end": 7, "frame": 2, "on_camera_speech": false,
+     "shot": {"start": "Raju (Indian man ~30, off-white kurta, red-checked gamchha) stands beside the upright tyre, neutral face",
+              "action": "he turns his head slightly toward off-screen left, then back to camera with a faint half-smile",
+              "end": "eyes on camera, half-smile held, body still",
+              "camera": "slow push-in, chest-up"},
+     "negatives": "no one else visible in frame, no cut, no text",
+     "ambient": "distant village chatter, very low"},
+
+    {"start": 7, "end": 10, "frame": 3, "on_camera_speech": false,
+     "shot": {"start": "Workshop bench; tyre rim partially converted into a round trough; hands holding a hammer at the rim",
+              "action": "two hammer taps seating a nail",
+              "end": "hammer resting on rim, nail seated, hands still",
+              "camera": "locked-off close-up on hands"},
+     "negatives": "no face in frame, no cut, no text, no extra tools appearing",
+     "ambient": "two soft hammer taps only"},
+
+    {"start": 10, "end": 13, "frame": 4, "on_camera_speech": false,
+     "shot": {"start": "Sunlit dirt yard; a neat row of four finished tyre-troughs; Raju carries a fifth",
+              "action": "he sets the fifth trough down at the end of the row",
+              "end": "he straightens up beside the row, hands on hips, facing camera",
+              "camera": "static wide"},
+     "negatives": "no other people, no animals, no cut, no text",
+     "ambient": "faint wind only"},
+
+    {"start": 13, "end": 17, "frame": 5, "on_camera_speech": false,
+     "shot": {"start": "Night, simple village room; Raju sits on a woven cot, face lit only by phone glow, scrolling",
+              "action": "he stops scrolling and lowers the phone to his lap, exhaling",
+              "end": "phone on lap, face down-lit, jaw tight, motionless",
+              "camera": "slow push-in, waist-up"},
+     "negatives": "no lights turning on, no other people, no cut, no on-screen content visible",
+     "ambient": "quiet room tone, single cricket, very low"},
+
+    {"start": 17, "end": 21, "frame": 6, "on_camera_speech": false,
+     "shot": {"start": "Close-up, Raju's hand holding a smartphone filling frame, screen plain bright white, thumb hovering",
+              "action": "thumb taps the blank white screen once",
+              "end": "thumb resting on screen edge, phone steady",
+              "camera": "locked-off insert"},
+     "negatives": "no interface, no text, no logos on screen, no second hand, no cut",
+     "ambient": "one soft tap"},
+
+    {"start": 21, "end": 24, "frame": 7, "on_camera_speech": false,
+     "shot": {"start": "Daylight at a low fence; Raju on one side holding a finished trough; older farmer in white dhoti on the other",
+              "action": "the trough passes over the fence; the farmer presses folded currency notes into Raju's free palm",
+              "end": "Raju's fist closed around the notes, both men still, trough in farmer's hands",
+              "camera": "static medium two-shot"},
+     "negatives": "no additional people, no cut, no text, faces calm not exaggerated",
+     "ambient": "one cattle low, soft"},
+
+    {"start": 24, "end": 27, "frame": 8, "on_camera_speech": false,
+     "shot": {"start": "Village market; Raju stands tall at a stall stacked with tyre-troughs; two buyers inspect one",
+              "action": "Raju straightens, chin lifting slightly",
+              "end": "proud upright stance, buyers mid-inspection, frozen beat",
+              "camera": "slow push-in from medium-wide"},
+     "negatives": "no crowd surge, no cut, no text, no vehicles",
+     "ambient": "low market murmur"},
+
+    {"start": 27, "end": 30, "frame": 9, "on_camera_speech": true,
+     "shot": {"start": "Chest-up at the stall, golden hour; Raju arms crossed, slight proud smile, eyes to camera",
+              "action": "one slow nod",
+              "end": "still, smiling at camera",
+              "camera": "locked-off chest-up"},
+     "negatives": "no background people approaching camera, no cut, no text in frame",
+     "ambient": "market murmur fading low"}
+  ],
+
+  "vo": [
+    {"start": 0,    "end": 3,    "speaker": "RAJU",      "line": "ये फेंका हुआ टायर?... इसमें महीने के 60,000 रुपये छुपे हैं।"},
+    {"start": 3,    "end": 4,    "speaker": "NEIGHBOUR", "line": "कबाड़ी!"},
+    {"start": 4,    "end": 7,    "speaker": "RAJU",      "line": "लोग यही बोलते थे।"},
+    {"start": 7,    "end": 10,   "speaker": "RAJU",      "line": "टायर — सिर्फ़ 120 का। नांद बनके बिकता है 600 में।"},
+    {"start": 10,   "end": 13,   "speaker": "RAJU",      "line": "दिन के पाँच बनाओ... हिसाब ख़ुद जोड़ लो।"},
+    {"start": 13,   "end": 17,   "speaker": "RAJU",      "line": "यूट्यूब देखा... बस यही ग़लती हो गयी।"},
+    {"start": 17,   "end": 21,   "speaker": "RAJU",      "line": "फिर सीखो ऐप की बिज़नेस आइडियाज़ कैटेगरी मिली — स्टेप बाय स्टेप... सिर्फ़ 1 रुपये के ट्रायल में।"},
+    {"start": 21,   "end": 22.5, "speaker": "FARMER",    "line": "ले भाई।"},
+    {"start": 22.5, "end": 24,   "speaker": "RAJU",      "line": "पहली कमाई — 600।"},
+    {"start": 24,   "end": 27,   "speaker": "RAJU",      "line": "आज? महीने के 70 हज़ार... लोग अब कारीगर बोलते हैं।"},
+    {"start": 27,   "end": 30,   "speaker": "RAJU",      "line": "तो इंस्टॉल बटन पर क्लिक करो — और सीखो ऐप डाउनलोड करो।"}
+  ],
+
+  "text": [
+    {"start": 1.5,  "end": 3,    "text": "₹60,000 / mahina?"},
+    {"start": 3,    "end": 5,    "text": "\"Kabaadi\""},
+    {"start": 7.5,  "end": 9,    "text": "Tyre = ₹120"},
+    {"start": 9,    "end": 10,   "text": "Naand = ₹600"},
+    {"start": 10.5, "end": 13,   "text": "5 / din → 150 / mahina"},
+    {"start": 13.5, "end": 16,   "text": "YouTube ✗ confusion"},
+    {"start": 17,   "end": 19,   "text": "Seekho → Business Ideas"},
+    {"start": 19,   "end": 21,   "text": "Sirf ₹1 ka trial"},
+    {"start": 22.5, "end": 24,   "text": "Pehli kamai: ₹600"},
+    {"start": 24.5, "end": 26,   "text": "₹70,000 / mahina"},
+    {"start": 27,   "end": 30,   "text": "Install karo Seekho app"}
+  ]
+}
