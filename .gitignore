@@ -6,3 +6,7 @@ __pycache__/
 *.pyc
 logs/
 output/
+
+# static ffmpeg binaries — fetch via bin/fetch_ffmpeg.sh
+bin/ffmpeg
+bin/ffprobe
