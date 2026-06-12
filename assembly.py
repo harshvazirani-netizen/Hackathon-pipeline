@@ -138,7 +138,8 @@ def _build_edit(bundle) -> dict:
     # Video track last (renders at the bottom).
     tracks.append({"clips": video_clips})
 
-    timeline = {"background": "#000000", "tracks": tracks}
+    timeline = {"background": "#000000", "tracks": tracks,
+                "fonts": [{"src": CAPTION_FONT_URL}]}
     music_url = bundle.audio.music_url or config.MUSIC_URL
     if music_url:
         timeline["soundtrack"] = {"src": music_url, "effect": "fadeOut"}
@@ -153,13 +154,28 @@ def _build_edit(bundle) -> dict:
     }
 
 
+CAPTION_FONT_FAMILY = "Poppins"
+CAPTION_FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts/ofl/poppins/Poppins-Bold.ttf"
+
+
 def _title(text: str, start: float, length: float, position: str = "bottom") -> dict:
-    """Caption clip. 'small' size so long lines don't clip the 9:16 frame."""
+    """Caption clip — Shotstack 'text' asset with a custom font (Poppins Bold) and a
+    soft rounded background for legibility. Font is loaded via timeline.fonts."""
     return {
-        "asset": {"type": "title", "text": _strip_emoji(text),
-                  "style": "subtitle", "size": "small", "position": position},
+        "asset": {
+            "type": "text",
+            "text": _strip_emoji(text),
+            "font": {"family": CAPTION_FONT_FAMILY, "color": "#ffffff",
+                     "size": 44, "weight": 700, "lineHeight": 1.15},
+            "alignment": {"horizontal": "center", "vertical": "center"},
+            "background": {"color": "#000000", "opacity": 0.5,
+                           "padding": 24, "borderRadius": 12},
+            "width": 1000, "height": 170,   # tight band, not a full-frame box
+        },
         "start": round(start, 3),
         "length": round(max(length, 0.5), 3),
+        "position": position,               # frame anchor: bottom | top
+        "offset": {"y": 0.07 if position == "bottom" else -0.07},  # nudge in from the edge
     }
 
 

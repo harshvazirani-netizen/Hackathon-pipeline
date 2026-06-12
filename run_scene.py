@@ -104,7 +104,8 @@ def _merge(video_url: str, audio_path: str | None, duration: float, dest: str,
                                   "start": 0, "length": length}]})
     tracks.append({"clips": [{"asset": {"type": "video", "src": video_url},
                               "start": 0, "length": length, "fit": "cover"}]})
-    edit = {"timeline": {"background": "#000000", "tracks": tracks},
+    edit = {"timeline": {"background": "#000000", "tracks": tracks,
+                         "fonts": [{"src": assembly.CAPTION_FONT_URL}]},
             "output": {"format": "mp4", "size": {"width": config.WIDTH, "height": config.HEIGHT}, "fps": 30}}
     r = requests.post(assembly._base("edit") + "/render", json=edit,
                       headers=assembly._headers(), timeout=60)
