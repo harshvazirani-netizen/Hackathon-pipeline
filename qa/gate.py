@@ -32,7 +32,15 @@ def run_qa(bundle, mp4_path: str) -> QAResult:
 
     for num, mod in _LAYERS:
         layer_reached = num
-        failures, scores = mod.run(bundle, mp4_path)
+        # A QA layer must never crash the pipeline. If a layer ERRORS (e.g. the
+        # Anthropic vision call is out of credits, or a tool is missing), treat it
+        # as a soft failure — log it and move on — rather than letting it bubble up
+        # and trigger a full (already-paid-for) generation retry.
+        try:
+            failures, scores = mod.run(bundle, mp4_path)
+        except Exception as e:                       # noqa: BLE001
+            failures, scores = [f"layer errored, skipped: {type(e).__name__}: {str(e)[:120]}"], {}
+            print(f"[QA] ⚠ layer {num} errored (skipped, not fatal): {type(e).__name__}")
         all_scores[f"layer{num}"] = scores
         if failures:
             all_failures += [f"L{num}: {f}" for f in failures]
