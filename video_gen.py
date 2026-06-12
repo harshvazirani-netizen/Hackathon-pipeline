@@ -146,13 +146,24 @@ def lipsync_from_image(model_id: str, image_url: str, audio_url: str,
     return _first_media_url(result, kind="video"), result
 
 
-def download(url: str, dest_path: str) -> str:
+def download(url: str, dest_path: str, retries: int = 3) -> str:
+    """Download with retries — a transient connection drop must NOT bubble up and
+    force the whole (already-paid-for) generation batch to re-run."""
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    with requests.get(url, stream=True, timeout=300) as r:
-        r.raise_for_status()
-        with open(dest_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1 << 16):
-                f.write(chunk)
+    for attempt in range(1, retries + 1):
+        try:
+            with requests.get(url, stream=True, timeout=300) as r:
+                r.raise_for_status()
+                with open(dest_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=1 << 16):
+                        f.write(chunk)
+            return dest_path
+        except (requests.exceptions.ChunkedEncodingError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            if attempt == retries:
+                raise
+            print(f"[dl] {type(e).__name__} — retry {attempt}/{retries - 1}")
     return dest_path
 
 
