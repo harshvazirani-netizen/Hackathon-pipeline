@@ -30,8 +30,8 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
     timeline slot and is never overwritten. If a spoken line runs longer than
     its slot, the VO is sped up to fit — ElevenLabs speed (its 1.2x cap) then
     ffmpeg atempo up to a combined config.MAX_VO_SPEED (1.5x), both pitch-preserved.
-    The screenplay slot is FIXED (never stretched); if a line still can't fit at
-    max speed we warn so it gets trimmed (it would otherwise be cut at the boundary).
+    The voiceover is NEVER cut: if a line still overruns at max speed, the scene is
+    extended so the whole line plays (lines that fit keep their exact slot).
     Returns captions with absolute timeline positions."""
     os.makedirs(work_dir, exist_ok=True)
     voice_map = voice_map or {}
@@ -48,18 +48,18 @@ def synthesize_per_beat(clips, work_dir: str, voice_map: dict | None = None) -> 
         else:
             beat_caps, path = _multi_segment(segs, clip, work_dir, voice_map)
         clip.audio_path = path
-        # The screenplay scene time is AUTHORITATIVE: the clip is generated/trimmed
-        # to this slot and the VO was already sped up (<=1.5x) to fit it. We do NOT
-        # stretch the scene to the voice. Only when a scene has NO slot do we fall
-        # back to the spoken length. If a line still can't fit at max speed, warn so
-        # it gets trimmed — it would otherwise be cut at the scene boundary.
+        # NEVER cut the voiceover. We first try to hold the screenplay slot by
+        # speeding the line up (<=config.MAX_VO_SPEED, pitch-preserved) — so lines
+        # that fit keep their exact slot. If a line STILL overruns at max speed, we
+        # extend the scene to play the whole line (the clip is trimmed to this), so
+        # no word is ever clipped at the cut.
         spoken = beat_caps[-1].end if beat_caps else 0.0
         if not clip.duration:
             clip.duration = round(spoken + 0.15, 2)
-        elif spoken > clip.duration + 0.25:
-            print(f"[VO] ⚠ beat {clip.index}: line is {spoken:.1f}s but the slot is "
-                  f"{clip.duration:.0f}s even at {config.MAX_VO_SPEED}x — TRIM ~"
-                  f"{spoken - clip.duration:.1f}s of words, or it gets cut at the cut.")
+        elif spoken > clip.duration + 0.05:
+            print(f"[VO] beat {clip.index}: line {spoken:.1f}s > {clip.duration:.0f}s slot "
+                  f"even at {config.MAX_VO_SPEED}x — extending scene to fit (no cut).")
+            clip.duration = round(spoken + 0.1, 2)
 
         for c in beat_caps:
             captions.append(Caption(text=c.text, start=c.start + offset, end=c.end + offset))
@@ -99,7 +99,8 @@ def _one_segment(seg, clip, work_dir, voice_map):
             print(f"[VO] beat {clip.index}: atempo {factor:.2f}x -> {spoken:.1f}s "
                   f"(combined {el_speed * factor:.2f}x, cap {config.MAX_VO_SPEED}x)")
     if target and spoken > target + 0.3:
-        print(f"[VO] ⚠ beat {clip.index} still {spoken:.1f}s in a {target:.0f}s slot — trim the line")
+        print(f"[VO] beat {clip.index} still {spoken:.1f}s in a {target:.0f}s slot at max speed "
+              f"— scene will extend to fit (no cut)")
     return caps, path
 
 
