@@ -67,7 +67,31 @@ def _stitch(clips, dest: str) -> str | None:
                       headers=assembly._headers(), timeout=60)
     r.raise_for_status()
     url = assembly._poll_render(r.json()["response"]["id"])
-    return assembly._download(url, dest)
+    path = assembly._download(url, dest)
+    return _normalize(path)
+
+
+def _normalize(path: str) -> str:
+    """Re-encode the stitched track to a clean, loudness-normalized mp3 (libmp3lame
+    44.1kHz, -16 LUFS) so it's loud + plays in any player. Fails soft without ffmpeg."""
+    import shutil
+    import subprocess
+    if not path or not shutil.which("ffmpeg"):
+        return path
+    tmp = path[:-4] + ".norm.mp3"
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-i", path,
+             "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
+             "-ar", "44100", "-ac", "2", "-c:a", "libmp3lame", "-b:a", "192k", tmp],
+            check=True,
+        )
+        os.replace(tmp, path)
+    except Exception as e:                               # noqa: BLE001
+        print(f"[VO] normalize skipped ({e})")
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    return path
 
 
 if __name__ == "__main__":
