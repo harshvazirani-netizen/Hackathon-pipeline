@@ -107,6 +107,8 @@ def _ingest_from_source(job_dir: str, source: str) -> tuple[AdTypeRecipe, list[C
             lipsync=bool(b.get("on_camera_speech", False)),
             low_motion=_low_motion(b),
             motion_prompt=b.get("motion_prompt", ""),
+            negatives=b.get("negatives", ""),
+            ambient=b.get("ambient", ""),
             duration=b["duration"],
             storyboard_image_path=_resolve_frame(job_dir, f"storyboard/frame_{frame}.jpg"),
         ))
@@ -131,6 +133,8 @@ def _ingest_from_manifest(job_dir: str, manifest: str) -> tuple[AdTypeRecipe, li
         lipsync=bool(b.get("on_camera_speech", False)),
         low_motion=_low_motion(b),
         motion_prompt=b.get("motion_prompt", ""),
+        negatives=b.get("negatives", ""),
+        ambient=b.get("ambient", ""),
         duration=float(b.get("duration", 5) or 5),
         storyboard_image_path=_resolve_frame(job_dir, b.get("storyboard_image_path")),
     ) for i, b in enumerate(beats)]

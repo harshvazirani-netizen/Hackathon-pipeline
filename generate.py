@@ -51,6 +51,7 @@ def generate_clips(clips, recipe: AdTypeRecipe, ad_id: str):
                 duration=int(clip.duration or config.DEFAULT_CLIP_SECONDS),
                 model_id=recipe.motion_model,
                 low_motion=clip.low_motion,
+                negatives=clip.negatives,
             )
 
         clip.video_url = video_url

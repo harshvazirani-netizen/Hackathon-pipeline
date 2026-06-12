@@ -14,6 +14,20 @@ Output: beats[] (the beats.json shape) with per-scene vo_segments + text_cues
 from __future__ import annotations
 
 
+def compose_motion(scene: dict) -> str:
+    """Build one motion prompt from the structured shot spec (START -> ONE action
+    -> END held still -> CAMERA). Falls back to a plain motion_prompt."""
+    if scene.get("motion_prompt"):
+        return scene["motion_prompt"]
+    shot = scene.get("shot") or {}
+    parts = []
+    if shot.get("start"):  parts.append(f"Start: {shot['start']}.")
+    if shot.get("action"): parts.append(f"One action: {shot['action']}.")
+    if shot.get("end"):    parts.append(f"End, held still: {shot['end']}.")
+    if shot.get("camera"): parts.append(f"Camera: {shot['camera']}.")
+    return " ".join(parts)
+
+
 def bucket_beats(scenes: list[dict], vo: list[dict], text: list[dict]) -> list[dict]:
     scenes = sorted(scenes, key=lambda s: s["start"])
     beats, last_speaker = [], ""
@@ -30,8 +44,11 @@ def bucket_beats(scenes: list[dict], vo: list[dict], text: list[dict]) -> list[d
                  "end": round(t["end"] - s0, 3), "position": t.get("position", "bottom")}
                 for t in sorted([t for t in text if s0 <= t["start"] < s1], key=lambda t: t["start"])]
 
-        beat = {k: v for k, v in sc.items() if k not in ("start", "end")}
+        beat = {k: v for k, v in sc.items() if k not in ("start", "end", "shot")}
         beat.update({"index": i, "duration": round(s1 - s0, 3),
+                     "motion_prompt": compose_motion(sc),
+                     "negatives": sc.get("negatives", ""),
+                     "ambient": sc.get("ambient", ""),
                      "vo_segments": segs, "text_cues": cues})
         beats.append(beat)
     return beats

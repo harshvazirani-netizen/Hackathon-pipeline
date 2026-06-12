@@ -43,7 +43,9 @@ class Clip(BaseModel):
     text_cues: list[TextCue] = Field(default_factory=list)  # timed text cues within this scene (cue sheet)
     lipsync: bool = False                      # True = a character speaks ON camera this beat
     low_motion: bool = False                   # near-static render to keep on-frame text/logos/packaging legible
-    motion_prompt: str = ""                    # action for this beat (from screenplay)
+    motion_prompt: str = ""                    # composed: START + ONE action + END(held) + CAMERA
+    negatives: str = ""                        # NEGATIVES -> model negative_prompt
+    ambient: str = ""                          # AMBIENT sound note (stored; SFX layer TODO)
     duration: float = 0.0                      # screenplay timing; lip-sync beats overwrite w/ audio length
 
     # storyboard-driven inputs (the approved frame IS the look):

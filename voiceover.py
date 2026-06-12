@@ -124,6 +124,15 @@ def synthesize(clips, out_path: str) -> tuple[AudioTrack, list[Caption]]:
 
 # ---- shared -------------------------------------------------------------------
 
+def _clean_delivery(text: str) -> str:
+    """Strip per-line delivery cues like (whispering)/(urgent) so they aren't spoken.
+    Keep '...' and '—' — ElevenLabs renders those as natural pauses."""
+    import re
+    text = re.sub(r"\([^)]*\)", "", text)          # remove (performance cues)
+    text = text.replace("·", " ").replace("|", " ")
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def _tts(text: str, voice_id: str | None = None, speed: float | None = None):
     from elevenlabs.client import ElevenLabs  # lazy
     if not os.getenv("ELEVENLABS_API_KEY"):
@@ -135,7 +144,7 @@ def _tts(text: str, voice_id: str | None = None, speed: float | None = None):
     resp = client.text_to_speech.convert_with_timestamps(
         voice_id=voice_id or config.ELEVENLABS_VOICE_ID,
         model_id=config.ELEVENLABS_MODEL,
-        text=text,
+        text=_clean_delivery(text),
         **kwargs,
     )
     audio_b64 = _get(resp, "audio_base64") or _get(resp, "audio_base_64")
